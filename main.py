@@ -38,7 +38,7 @@ def save_json(path: Path, data) -> None:
 
 @app.get("/")
 def root():
-    return FileResponse(BASE / "static" / "index.html")
+    return FileResponse(BASE / "index.html")
 
 
 @app.get("/api/strains")
@@ -158,4 +158,4 @@ Be technically precise and craft-focused. Include details a passionate home grow
     return result
 
 
-app.mount("/static", StaticFiles(directory=str(BASE / "static")), name="static")
+app.mount("/images", StaticFiles(directory=str(BASE / "images")), name="images")

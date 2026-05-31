@@ -511,15 +511,18 @@ const DEFAULT_RESEARCH = {
   }
 };
 
-function init() {
-  const saved = loadStrains();
-  allStrains    = saved || JSON.parse(JSON.stringify(DEFAULT_STRAINS));
-  researchCache = loadResearch();
-  if (!saved) saveStrains();
-  if (Object.keys(researchCache).length === 0) {
-    researchCache = JSON.parse(JSON.stringify(DEFAULT_RESEARCH));
-    saveResearch();
+async function init() {
+  try {
+    const resp = await fetch('/api/strains');
+    if (!resp.ok) throw new Error();
+    const data = await resp.json();
+    allStrains = data.strains || [];
+  } catch {
+    const saved = loadStrains();
+    allStrains = saved || JSON.parse(JSON.stringify(DEFAULT_STRAINS));
+    if (!saved) saveStrains();
   }
+  researchCache = loadResearch();
   updateKeyIndicator();
   renderGrid();
 }
@@ -583,7 +586,7 @@ function setFilter(f, btn) {
   renderGrid();
 }
 
-function openDetail(id) {
+async function openDetail(id) {
   currentId = id;
   const strain = allStrains.find(s => s.id === id);
   if (!strain) return;
@@ -599,6 +602,18 @@ function openDetail(id) {
   loadStrainImg(heroImg, id);
   showOverlay('detail-modal');
   if (researchCache[id]) { renderResearch(researchCache[id], strain); return; }
+  try {
+    const resp = await fetch(`/api/research/${id}`);
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data && Object.keys(data).length > 0) {
+        researchCache[id] = data;
+        saveResearch();
+        renderResearch(data, strain);
+        return;
+      }
+    }
+  } catch {}
   showGeneratePanel(strain);
 }
 
@@ -636,49 +651,64 @@ function showGeneratePanel(strain) {
 function renderResearch(r, strain) {
   const tabs    = document.getElementById('research-tabs');
   const body    = document.getElementById('modal-body');
-  const genDate = r.generated_at ? new Date(r.generated_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '&mdash;';
-  const mr = r.mood_ratings || {};
+  const genDate = r.generated_at ? new Date(r.generated_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '';
+
+  // Support both old field names (lineage, aroma, misc) and new ones (genetics_lineage, flavor_aroma)
+  const lineage  = r.genetics_lineage || r.lineage      || '';
+  const aroma    = r.flavor_aroma     || r.aroma        || '';
+  const misc     = r.misc             || '';
+  const terps    = r.terpene_profile  || '';
+  const effects  = r.effects          || '';
+  const grow     = r.grow_notes       || '';
+  const rosin    = r.rosin_extraction || '';
+
+  const mr       = r.mood_ratings || {};
+  const hasMoods = Object.keys(mr).length > 0;
   const moodBars = MOODS.map(m => {
     const score = mr[m.key] || 0;
-    const pct   = (score / 10) * 100;
     return `<div class="mood-row">
       <span class="mood-label">${esc(m.label)}</span>
-      <div class="mood-bar-wrap"><div class="mood-bar-fill" style="width:${pct}%"></div></div>
+      <div class="mood-bar-wrap"><div class="mood-bar-fill" style="width:${(score/10)*100}%"></div></div>
       <span class="mood-score">${score}</span>
     </div>`;
   }).join('');
+
   const therapeuticPills = (r.therapeutic || '').split(',').map(t => t.trim()).filter(Boolean)
     .map(t => `<span class="pill pill-green">${esc(t)}</span>`).join('');
   const negativePills = (r.negative || '').split(',').map(t => t.trim()).filter(Boolean)
     .map(t => `<span class="pill pill-red">${esc(t)}</span>`).join('');
+
   body.innerHTML = `
     <div class="research-panel active" id="panel-genetics">
-      <div class="research-block"><div class="section-title">&#x1F9EC;&nbsp;Genetics &amp; Lineage</div><div class="research-text">${esc(r.lineage || '&mdash;')}</div></div>
-      <div class="research-block" style="margin-top:1.1rem"><div class="research-block-label">Breeder Notes</div><div class="research-text">${esc(r.misc || '&mdash;')}</div></div>
+      <div class="research-block"><div class="section-title">&#x1F9EC;&nbsp;Genetics &amp; Lineage</div><div class="research-text">${esc(lineage || '—')}</div></div>
+      ${misc ? `<div class="research-block" style="margin-top:1.1rem"><div class="research-block-label">Breeder Notes</div><div class="research-text">${esc(misc)}</div></div>` : ''}
+      ${genDate ? `<div class="research-meta" style="margin-top:1rem">Generated ${genDate} &middot; Claude AI</div>` : ''}
     </div>
     <div class="research-panel" id="panel-terpenes">
-      <div class="research-block"><div class="section-title">&#x1F33F;&nbsp;Terpene Profile</div><div class="research-text">${esc(r.terpene_profile || '&mdash;')}</div></div>
-      <div class="research-block" style="margin-top:1.1rem"><div class="research-block-label">Aroma</div><div class="research-text">${esc(r.aroma || '&mdash;')}</div></div>
+      <div class="research-block"><div class="section-title">&#x1F33F;&nbsp;Terpene Profile</div><div class="research-text">${esc(terps || '—')}</div></div>
+      ${aroma ? `<div class="research-block" style="margin-top:1.1rem"><div class="research-block-label">Flavor &amp; Aroma</div><div class="research-text">${esc(aroma)}</div></div>` : ''}
     </div>
     <div class="research-panel" id="panel-effects">
-      <div class="research-block"><div class="section-title">&#x2728;&nbsp;Effects</div><div class="research-text" style="margin-bottom:.9rem">${esc(r.effects || '&mdash;')}</div></div>
-      <div class="research-block"><div class="research-block-label">Therapeutic</div><div class="pill-list">${therapeuticPills || '<span style="color:var(--faint);font-size:.8rem">&mdash;</span>'}</div></div>
-      <div class="research-block" style="margin-top:.85rem"><div class="research-block-label">Side Effects &amp; Cautions</div><div class="pill-list">${negativePills || '<span style="color:var(--faint);font-size:.8rem">&mdash;</span>'}</div></div>
+      <div class="research-block"><div class="section-title">&#x2728;&nbsp;Effects</div><div class="research-text" style="margin-bottom:.9rem">${esc(effects || '—')}</div></div>
+      ${therapeuticPills ? `<div class="research-block"><div class="research-block-label">Therapeutic</div><div class="pill-list">${therapeuticPills}</div></div>` : ''}
+      ${negativePills ? `<div class="research-block" style="margin-top:.85rem"><div class="research-block-label">Side Effects &amp; Cautions</div><div class="pill-list">${negativePills}</div></div>` : ''}
     </div>
-    <div class="research-panel" id="panel-moods">
+    ${hasMoods ? `<div class="research-panel" id="panel-moods">
       <div class="section-title">&#x1F4CA;&nbsp;Mood Ratings</div>
       <div class="mood-grid">${moodBars}</div>
-      <div class="research-meta">Generated ${genDate} &middot; Claude AI</div>
-    </div>
-    <div class="research-panel" id="panel-grow"><div class="section-title">&#x1FAB4;&nbsp;Grow Notes</div><div class="research-text">${esc(r.grow_notes || '&mdash;')}</div></div>
-    <div class="research-panel" id="panel-rosin"><div class="section-title">&#x1F36F;&nbsp;Rosin &amp; Extraction</div><div class="research-text">${esc(r.rosin_extraction || '&mdash;')}</div></div>
+    </div>` : '<div class="research-panel" id="panel-moods"></div>'}
+    <div class="research-panel" id="panel-grow"><div class="section-title">&#x1FAB4;&nbsp;Grow Notes</div><div class="research-text">${esc(grow || '—')}</div></div>
+    <div class="research-panel" id="panel-rosin"><div class="section-title">&#x1F36F;&nbsp;Rosin &amp; Extraction</div><div class="research-text">${esc(rosin || '—')}</div></div>
     <div class="research-panel" id="panel-notes">
       <div class="section-title">&#x1F4DD;&nbsp;My Notes</div>
       <textarea class="notes-textarea" id="notes-main" placeholder="Personal grow notes, observations&hellip;">${esc(strain.notes || '')}</textarea>
       <div class="notes-actions"><button class="btn btn-outline" onclick="saveNotes()">Save Notes</button></div>
     </div>`;
+
   tabs.classList.remove('hidden');
-  tabs.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+  tabs.querySelectorAll('.tab-btn').forEach(t => { t.classList.remove('active'); t.style.display = ''; });
+  const moodsTab = tabs.querySelector('[data-tab="moods"]');
+  if (moodsTab) moodsTab.style.display = hasMoods ? '' : 'none';
   tabs.querySelector('[data-tab="genetics"]').classList.add('active');
 }
 
@@ -692,28 +722,42 @@ function switchTab(tabId, btn) {
 
 async function generateResearch() {
   if (!currentId) return;
-  const apiKey = getApiKey();
-  if (!apiKey) { toast('Add your Anthropic API key first &#9881;'); openSettings(); return; }
   const strain = allStrains.find(s => s.id === currentId);
   setModalBody(`<div class="loading-panel"><div class="spinner"></div>
     <div class="loading-text">Claude is researching ${esc(strain?.name || 'this strain')}&hellip;</div>
-    <div class="loading-sub">Genetics &middot; Terpenes &middot; Moods &middot; Grow &middot; Rosin</div></div>`);
-  const prompt = `You are a cannabis genetics expert and master craft cultivator specializing in solventless extraction. Generate a detailed research profile for "${strain.name}" by ${strain.breeder}.
+    <div class="loading-sub">Genetics &middot; Terpenes &middot; Grow &middot; Rosin</div></div>`);
+
+  // Try server API first (no key needed)
+  try {
+    const resp = await fetch(`/api/research/${currentId}`, { method: 'POST' });
+    if (resp.ok) {
+      const result = await resp.json();
+      if (result && Object.keys(result).length > 0) {
+        researchCache[currentId] = result;
+        saveResearch();
+        renderResearch(result, strain);
+        renderGrid();
+        toast('Research generated &#x2726;');
+        return;
+      }
+    }
+  } catch {}
+
+  // Fall back to direct Anthropic API
+  const apiKey = getApiKey();
+  if (!apiKey) { toast('Add your Anthropic API key first &#9881;'); openSettings(); return; }
+  const prompt = `You are a cannabis genetics expert and master craft cultivator specializing in solventless extraction. Generate a detailed research profile for "${strain.name}" by ${strain.breeder}. Many strains in this collection were sourced from Pig Tail Gardens (pigtailgardens.com), a small-batch breeder and cultivator in Hollywood, CA.
 
 Return ONLY valid JSON:
 {
-  "lineage": "Full genetic lineage with breeder background. 1-2 sentences.",
-  "misc": "Breeder info, THC range, bud appearance, best use timing. 2-3 sentences.",
-  "terpene_profile": "Dominant and secondary terpenes, aromas, synergistic interactions. 2-3 sentences.",
-  "aroma": "Vivid and specific aroma description. 1-2 sentences.",
-  "effects": "Onset, intensity, cerebral vs body, duration, mood profile. 2-3 sentences.",
-  "therapeutic": "Medical uses, comma-separated",
-  "negative": "Side effects and cautions, comma-separated",
-  "grow_notes": "Structure, stretch, flowering time, yield, training, VPD/temp/humidity, harvest indicators. 3-4 sentences.",
-  "rosin_extraction": "IWHE and rosin suitability, yield %, press temps in F, wash water temps, final product description. 3-4 sentences.",
-  "mood_ratings": { "wind_down":0, "anxiety_relief":0, "lift_up":0, "get_creative":0, "get_social":0, "pain_body":0, "just_happy":0, "aphrodisiac":0 }
+  "genetics_lineage": "Full genetic lineage, breeder background, PTG provenance if applicable. 3-4 sentences.",
+  "terpene_profile": "Dominant and secondary terpenes, aromas, synergistic interactions, expression in rosin. 3-4 sentences.",
+  "effects": "Onset, intensity, cerebral vs body, duration, mood profile, best use cases. 3-4 sentences.",
+  "flavor_aroma": "Detailed flavor notes inhale/exhale, aroma at grow stages and after cure. 3-4 sentences.",
+  "grow_notes": "Structure, stretch, flowering time, training, VPD/temp/humidity, harvest indicators. 3-4 sentences.",
+  "rosin_extraction": "IWHE yield %, wash water temps, press temps in F, final product description. 3-4 sentences."
 }
-Score mood_ratings 1-10. Most scores 3-6. Max 3 moods can score 8+. Output only JSON.`;
+Output only JSON.`;
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
