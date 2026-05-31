@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brandon's Grow Log</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#08090f; --surface:#0f1120; --card:#161828; --card-hover:#1e2236;
+      --border:#252d4a; --border-hi:#3a4570;
+      --text:#d4d9f5; --muted:#7a85b8; --faint:#3a4570;
+      --gold:#5bc8e8; --gold-hi:#7ee0f8; --gold-dim:#2a6880;
+      --green:#5c8050; --green-hi:#78a868;
+      --cured-bg:#082c18;   --cured-fg:#a8cc48;
+      --growlog-bg:#2c1e06; --growlog-fg:#e0a030;
+      --active-bg:#082018;  --active-fg:#38c868;
+      --vault-bg:#1a1538;   --vault-fg:#9b78e8;
+    }
+    html { scroll-behavior: smooth; }
+    body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; font-size:15px; line-height:1.6; min-height:100vh; }
+
+    header { background:linear-gradient(180deg,#08090f00 0%,var(--surface) 100%),linear-gradient(135deg,#08090f 0%,#0f1120 100%); border-bottom:1px solid var(--border); padding:1.4rem 2rem; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+    .brand { display:flex; flex-direction:column; gap:2px; }
+    .brand-name { font-family:'Playfair Display',serif; font-size:1.55rem; color:var(--gold-hi); letter-spacing:.01em; line-height:1.1; }
+    .brand-tagline { font-size:.68rem; color:var(--muted); letter-spacing:.18em; text-transform:uppercase; }
+    .header-actions { display:flex; gap:.65rem; align-items:center; }
+
+    .btn { padding:.45rem 1rem; border-radius:6px; border:none; cursor:pointer; font-family:'Inter',sans-serif; font-size:.82rem; font-weight:500; transition:all .15s ease; line-height:1.4; }
+    .btn-outline { background:transparent; border:1px solid var(--border-hi); color:var(--muted); }
+    .btn-outline:hover { border-color:var(--gold-dim); color:var(--gold); }
+    .btn-danger { background:#2c1010; border:1px solid #5a2828; color:#d06060; }
+    .btn-danger:hover { background:#3c1818; }
+    .btn-icon { background:transparent; border:1px solid var(--border); color:var(--faint); border-radius:6px; padding:.4rem .6rem; cursor:pointer; font-size:1rem; line-height:1; transition:all .15s; }
+    .btn-icon:hover { border-color:var(--gold-dim); color:var(--gold); }
+    .btn-generate { padding:.7rem 1.6rem; background:linear-gradient(135deg,var(--gold-dim),var(--gold)); color:#0c0a07; border:none; border-radius:8px; font-size:.88rem; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition:all .2s ease; display:inline-flex; align-items:center; gap:.5rem; }
+    .btn-generate:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(91,200,232,.3); }
+    .btn-generate:disabled { opacity:.55; cursor:not-allowed; transform:none; box-shadow:none; }
+
+    .filter-bar { background:var(--surface); border-bottom:1px solid var(--border); padding:.6rem 2rem; display:flex; gap:.45rem; align-items:center; overflow-x:auto; }
+    .filter-label { font-size:.65rem; text-transform:uppercase; letter-spacing:.12em; color:var(--faint); margin-right:.2rem; white-space:nowrap; flex-shrink:0; }
+    .filter-btn { padding:.3rem .85rem; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; font-size:.76rem; font-weight:500; font-family:'Inter',sans-serif; transition:all .15s ease; white-space:nowrap; flex-shrink:0; }
+    .filter-btn:hover { border-color:var(--border-hi); color:var(--text); }
+    .filter-btn.active { background:var(--card); border-color:var(--gold-dim); color:var(--gold); }
+    .filter-btn[data-filter="Active"].active    { background:var(--active-bg);  border-color:var(--active-fg);  color:var(--active-fg); }
+    .filter-btn[data-filter="Grow Log"].active  { background:var(--growlog-bg); border-color:var(--growlog-fg); color:var(--growlog-fg); }
+    .filter-btn[data-filter="Cured"].active     { background:var(--cured-bg);   border-color:var(--cured-fg);   color:var(--cured-fg); }
+    .filter-btn[data-filter="Vault"].active     { background:var(--vault-bg);   border-color:var(--vault-fg);   color:var(--vault-fg); }
+    .strain-count-badge { margin-left:auto; flex-shrink:0; font-size:.65rem; color:var(--faint); font-family:'JetBrains Mono',monospace; letter-spacing:.04em; }
+
+    main { padding:1.75rem 2rem 3rem; max-width:1400px; margin:0 auto; }
+    .strain-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:1rem; }
+
+    .strain-card { background:var(--card); border:1px solid var(--border); border-radius:10px; cursor:pointer; transition:all .18s ease; display:flex; flex-direction:column; overflow:hidden; }
+    .strain-card:hover { background:var(--card-hover); border-color:var(--border-hi); transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,0,0,.5); }
+    .card-img { width:100%; aspect-ratio:3/4; object-fit:cover; display:none; }
+    .card-body { padding:1.2rem 1.1rem; display:flex; flex-direction:column; gap:.55rem; flex:1; }
+    .card-top { display:flex; justify-content:space-between; align-items:flex-start; gap:.5rem; }
+    .card-name { font-family:'Playfair Display',serif; font-size:1rem; color:var(--text); line-height:1.3; }
+    .card-breeder { font-size:.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-top:2px; }
+    .status-tag { display:inline-flex; align-items:center; padding:.18rem .55rem; border-radius:10px; font-size:.62rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; white-space:nowrap; flex-shrink:0; }
+    .status-tag.Cured    { background:var(--cured-bg);   color:var(--cured-fg); }
+    .status-tag.Grow-Log { background:var(--growlog-bg); color:var(--growlog-fg); }
+    .status-tag.Active   { background:var(--active-bg);  color:var(--active-fg); }
+    .status-tag.Vault    { background:var(--vault-bg);   color:var(--vault-fg); }
+    .card-notes { font-size:.74rem; color:var(--muted); font-style:italic; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; border-top:1px solid var(--border); padding-top:.5rem; }
+    .card-footer { display:flex; justify-content:space-between; align-items:center; margin-top:auto; }
+    .card-date { font-size:.65rem; color:var(--faint); font-family:'JetBrains Mono',monospace; }
+    .card-researched { font-size:.62rem; color:var(--green-hi); display:flex; align-items:center; gap:3px; letter-spacing:.04em; }
+
+    .modal-hero-img { width:100%; max-height:260px; object-fit:cover; display:none; }
+
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.78); backdrop-filter:blur(5px); z-index:200; display:flex; align-items:center; justify-content:center; padding:1rem; }
+    .modal-overlay.hidden { display:none; }
+    .modal-box { background:var(--surface); border:1px solid var(--border-hi); border-radius:14px; width:100%; max-width:780px; max-height:90vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 32px 80px rgba(0,0,0,.65); }
+    .modal-header { padding:1.4rem 1.6rem 1.1rem; border-bottom:1px solid var(--border); flex-shrink:0; display:flex; flex-direction:column; gap:.6rem; }
+    .modal-header-row { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; }
+    .modal-name { font-family:'Playfair Display',serif; font-size:1.5rem; color:var(--text); line-height:1.2; }
+    .modal-breeder { font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; margin-top:3px; }
+    .modal-close { background:transparent; border:none; color:var(--faint); cursor:pointer; font-size:1.2rem; padding:.2rem; line-height:1; flex-shrink:0; transition:color .15s; }
+    .modal-close:hover { color:var(--text); }
+    .modal-controls { display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; }
+    .status-update-group { display:flex; align-items:center; gap:.45rem; }
+    select { background:var(--card); color:var(--text); border:1px solid var(--border-hi); border-radius:6px; padding:.3rem .7rem; font-size:.78rem; font-family:'Inter',sans-serif; cursor:pointer; }
+    select:focus { outline:1px solid var(--gold-dim); }
+
+    .research-tabs { display:flex; border-bottom:1px solid var(--border); overflow-x:auto; flex-shrink:0; background:var(--surface); padding:0 1rem; scrollbar-width:none; }
+    .research-tabs::-webkit-scrollbar { display:none; }
+    .tab-btn { padding:.7rem .9rem; font-size:.76rem; font-weight:500; color:var(--muted); cursor:pointer; border:none; background:transparent; border-bottom:2px solid transparent; white-space:nowrap; transition:all .15s; font-family:'Inter',sans-serif; letter-spacing:.02em; flex-shrink:0; }
+    .tab-btn:hover { color:var(--text); }
+    .tab-btn.active { color:var(--gold); border-bottom-color:var(--gold); }
+
+    .modal-body { overflow-y:auto; flex:1; min-height:0; }
+    .research-panel { padding:1.5rem 1.6rem; display:none; }
+    .research-panel.active { display:block; }
+    .section-title { font-family:'Playfair Display',serif; font-size:1.05rem; color:var(--gold-hi); margin-bottom:.75rem; display:flex; align-items:center; gap:.45rem; }
+    .research-text { color:var(--text); line-height:1.8; font-size:.88rem; }
+    .research-meta { margin-top:1.2rem; padding-top:.75rem; border-top:1px solid var(--border); font-size:.66rem; color:var(--faint); font-family:'JetBrains Mono',monospace; }
+    .research-block { margin-bottom:1.25rem; }
+    .research-block:last-child { margin-bottom:0; }
+    .research-block-label { font-size:.65rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:.3rem; font-weight:500; }
+
+    .pill-list { display:flex; flex-wrap:wrap; gap:.35rem; }
+    .pill { padding:.2rem .6rem; border-radius:10px; font-size:.72rem; font-weight:500; }
+    .pill-green { background:var(--active-bg); color:var(--active-fg); }
+    .pill-red   { background:#2c1010; color:#d06060; }
+
+    .mood-grid { display:flex; flex-direction:column; gap:.7rem; }
+    .mood-row { display:flex; align-items:center; gap:.75rem; }
+    .mood-label { font-size:.75rem; color:var(--muted); width:110px; flex-shrink:0; white-space:nowrap; }
+    .mood-bar-wrap { flex:1; background:var(--border); border-radius:4px; height:7px; overflow:hidden; }
+    .mood-bar-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--gold-dim),var(--gold)); transition:width .4s ease; }
+    .mood-score { font-size:.72rem; color:var(--faint); width:22px; text-align:right; font-family:'JetBrains Mono',monospace; flex-shrink:0; }
+
+    .generate-panel { padding:3rem 1.6rem; text-align:center; display:flex; flex-direction:column; align-items:center; gap:1.1rem; }
+    .generate-glyph { font-size:2.4rem; opacity:.45; }
+    .generate-title { font-family:'Playfair Display',serif; font-size:1.15rem; color:var(--muted); }
+    .generate-desc { font-size:.82rem; color:var(--faint); max-width:380px; line-height:1.6; }
+    .loading-panel { padding:3.5rem 1.6rem; text-align:center; display:flex; flex-direction:column; align-items:center; gap:1.1rem; }
+    .spinner { width:38px; height:38px; border:3px solid var(--border); border-top-color:var(--gold); border-radius:50%; animation:spin .85s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .loading-text { color:var(--muted); font-size:.88rem; }
+    .loading-sub  { color:var(--faint); font-size:.76rem; }
+
+    .notes-textarea { width:100%; background:var(--card); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:.86rem; font-family:'Inter',sans-serif; padding:.75rem .9rem; resize:vertical; min-height:120px; line-height:1.65; }
+    .notes-textarea:focus { outline:1px solid var(--gold-dim); border-color:var(--gold-dim); }
+    .notes-textarea::placeholder { color:var(--faint); }
+    .notes-actions { display:flex; justify-content:flex-end; gap:.5rem; margin-top:.7rem; }
+
+    .settings-modal-box { max-width:460px; }
+    .modal-form-body { padding:1.4rem 1.6rem; display:flex; flex-direction:column; gap:1rem; }
+    .form-group { display:flex; flex-direction:column; gap:.3rem; }
+    .form-label { font-size:.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:.09em; font-weight:500; }
+    .form-input { background:var(--card); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:.88rem; font-family:'Inter',sans-serif; padding:.55rem .85rem; }
+    .form-input:focus { outline:1px solid var(--gold-dim); border-color:var(--gold-dim); }
+    .form-input::placeholder { color:var(--faint); }
+    .modal-form-footer { padding:.9rem 1.6rem; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:.6rem; }
+    .key-hint { font-size:.74rem; color:var(--faint); line-height:1.5; }
+
+    .empty-state { grid-column:1/-1; text-align:center; padding:4rem 2rem; }
+    .empty-glyph { font-size:2.2rem; opacity:.35; margin-bottom:.75rem; }
+    .empty-text  { font-size:.85rem; color:var(--faint); }
+    footer { border-top:1px solid var(--border); padding:1.4rem 2rem; text-align:center; margin-top:1rem; }
+    .footer-text { font-size:.68rem; color:var(--faint); letter-spacing:.08em; text-transform:uppercase; }
+    .sep { display:inline-block; margin:0 .45rem; opacity:.4; }
+    .toast { position:fixed; bottom:1.5rem; right:1.5rem; background:var(--card-hover); border:1px solid var(--border-hi); color:var(--text); padding:.65rem 1.1rem; border-radius:8px; font-size:.82rem; z-index:999; box-shadow:0 8px 24px rgba(0,0,0,.4); transition:opacity .3s ease; }
+    .toast.hidden { opacity:0; pointer-events:none; }
+
+    @media (max-width:640px) {
+      header { padding:1rem; } .brand-name { font-size:1.25rem; }
+      main { padding:1rem 1rem 2.5rem; } .filter-bar { padding:.6rem 1rem; }
+      .strain-grid { grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:.75rem; }
+      .modal-box { max-height:95vh; } .modal-name { font-size:1.25rem; }
+      .mood-label { width:90px; font-size:.68rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-name">Brandon's Grow Log</div>
+    <div class="brand-tagline">Pigtail Gardens &middot; Track &middot; Harvest</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-icon" id="key-indicator" onclick="openSettings()" title="API Key Settings">&#9881;</button>
+  </div>
+</header>
+
+<div class="filter-bar">
+  <span class="filter-label">Filter</span>
+  <button class="filter-btn active" data-filter="all"      onclick="setFilter('all',this)">All</button>
+  <button class="filter-btn"        data-filter="Active"   onclick="setFilter('Active',this)">Active</button>
+  <button class="filter-btn"        data-filter="Grow Log" onclick="setFilter('Grow Log',this)">Grow Log</button>
+  <button class="filter-btn"        data-filter="Cured"    onclick="setFilter('Cured',this)">Cured</button>
+  <button class="filter-btn"        data-filter="Vault"    onclick="setFilter('Vault',this)">Vault</button>
+  <span class="strain-count-badge" id="strain-count"></span>
+</div>
+
+<main>
+  <div class="strain-grid" id="strain-grid">
+    <div class="empty-state"><div class="empty-glyph">&#127807;</div><div class="empty-text">Loading&hellip;</div></div>
+  </div>
+</main>
+
+<!-- Detail modal -->
+<div class="modal-overlay hidden" id="detail-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-header-row">
+        <div><div class="modal-name" id="modal-name"></div><div class="modal-breeder" id="modal-breeder"></div></div>
+        <button class="modal-close" onclick="closeDetailModal()">&#x2715;</button>
+      </div>
+      <div class="modal-controls">
+        <span id="modal-status-tag" class="status-tag"></span>
+        <div class="status-update-group">
+          <select id="modal-status-select">
+            <option value="Active">Active</option>
+            <option value="Grow Log">Grow Log</option>
+            <option value="Cured">Cured</option>
+            <option value="Vault">Vault</option>
+          </select>
+          <button class="btn btn-outline" onclick="updateStatus()">Update</button>
+        </div>
+        <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+      </div>
+    </div>
+    <img id="modal-strain-img" class="modal-hero-img" alt="">
+    <div class="research-tabs hidden" id="research-tabs">
+      <button class="tab-btn active" data-tab="genetics" onclick="switchTab('genetics',this)">&#x1F9EC; Genetics</button>
+      <button class="tab-btn" data-tab="terpenes"        onclick="switchTab('terpenes',this)">&#x1F33F; Terpenes</button>
+      <button class="tab-btn" data-tab="effects"         onclick="switchTab('effects',this)">&#x2728; Effects</button>
+      <button class="tab-btn" data-tab="moods"           onclick="switchTab('moods',this)">&#x1F4CA; Moods</button>
+      <button class="tab-btn" data-tab="grow"            onclick="switchTab('grow',this)">&#x1FAB4; Grow Notes</button>
+      <button class="tab-btn" data-tab="rosin"           onclick="switchTab('rosin',this)">&#x1F36F; Rosin</button>
+      <button class="tab-btn" data-tab="notes"           onclick="switchTab('notes',this)">&#x1F4DD; My Notes</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div class="modal-overlay hidden" id="settings-modal">
+  <div class="modal-box settings-modal-box">
+    <div class="modal-header">
+      <div class="modal-header-row">
+        <div class="modal-name" style="font-size:1.3rem">&#9881; API Key</div>
+        <button class="modal-close" onclick="closeSettings()">&#x2715;</button>
+      </div>
+    </div>
+    <div class="modal-form-body">
+      <div class="form-group">
+        <label class="form-label">Anthropic API Key</label>
+        <input class="form-input" type="password" id="api-key-input" placeholder="sk-ant-..." autocomplete="off">
+        <div class="key-hint" style="margin-top:.4rem">Stored in your browser only &mdash; never committed to the repo. Get yours at console.anthropic.com.</div>
+      </div>
+    </div>
+    <div class="modal-form-footer">
+      <button class="btn btn-danger" onclick="clearApiKey()">Clear</button>
+      <div style="display:flex;gap:.5rem">
+        <button class="btn btn-outline" onclick="closeSettings()">Cancel</button>
+        <button class="btn btn-outline" onclick="saveApiKey()" style="border-color:var(--gold-dim);color:var(--gold)">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<footer>
+  <div class="footer-text">
+    Brandon's Grow Log <span class="sep">&middot;</span> Pigtail Gardens <span class="sep">&middot;</span> Personal Use Only <span class="sep">&middot;</span> Research powered by Claude AI
+  </div>
+</footer>
+
+<script>
+'use strict';
+
+const LS_STRAINS  = 'bgl_strains';
+const LS_RESEARCH = 'bgl_research';
+const LS_APIKEY   = 'bgl_apikey';
+
+const DEFAULT_STRAINS = [
+  { id:'pineapples-in-space-4', name:'Pineapples in Space #4', breeder:'Pigtail Gardens', status:'Vault', notes:'', added:'2026-05-28' },
+  { id:'rainbow-runtz',         name:'Rainbow Runtz',          breeder:'Pigtail Gardens', status:'Vault', notes:'', added:'2026-05-28' },
+  { id:'jam-pack-2',            name:'Jam Pack #2',            breeder:'Pigtail Gardens', status:'Vault', notes:'', added:'2026-05-28' },
+  { id:'kryptochronic',         name:'Kryptochronic',          breeder:'Pigtail Gardens', status:'Vault', notes:'', added:'2026-05-28' },
+  { id:'cherry-jealousy',       name:'Cherry Jealousy',        breeder:'Pigtail Gardens', status:'Vault', notes:'', added:'2026-05-28' },
+  { id:'lipsmackerz',           name:'Lipsmackerz',            breeder:'Pigtail Gardens', status:'Vault', notes:'', added:'2026-05-28' },
+  { id:'limecicle',             name:'Limecicle',              breeder:'Pigtail Gardens', status:'Vault', notes:'', added:'2026-05-28' },
+  { id:'papayamosa',            name:'Papayamosa',             breeder:'Pigtail Gardens', status:'Vault', notes:'', added:'2026-05-28' },
+  { id:'nana-glue',             name:'Nana Glue',              breeder:'Pigtail Gardens', status:'Vault', notes:'', added:'2026-05-28' },
+  { id:'cream-smoothie',        name:'Cream Smoothie',         breeder:'Pigtail Gardens', status:'Vault', notes:'', added:'2026-05-28' },
+  { id:'grease-monkey',         name:'Grease Monkey',          breeder:'Pigtail Gardens', status:'Vault', notes:'', added:'2026-05-28' },
+  { id:'blue-nerdz',            name:'Blue Nerdz',             breeder:'Pigtail Gardens', status:'Vault', notes:'', added:'2026-05-28' },
+  { id:'jet-fuel-og',           name:'Jet Fuel OG',            breeder:'Pigtail Gardens', status:'Vault', notes:'', added:'2026-05-28' },
+  { id:'blue-dream',            name:'Blue Dream',             breeder:'Pigtail Gardens', status:'Vault', notes:'', added:'2026-05-28' },
+  { id:'pre-98-bubba-kush',     name:'Pre 98 Bubba Kush',      breeder:'Pigtail Gardens', status:'Vault', notes:'', added:'2026-05-28' },
+  { id:'skywalker-og',          name:'Skywalker OG',           breeder:'Pigtail Gardens', status:'Vault', notes:'', added:'2026-05-28' },
+  { id:'kush-mintz',            name:'Kush Mintz',             breeder:'Pigtail Gardens', status:'Vault', notes:'', added:'2026-05-28' },
+];
+
+const MOODS = [
+  { key:'wind_down',     label:'Wind Down'     },
+  { key:'anxiety_relief',label:'Anxiety Relief'},
+  { key:'lift_up',       label:'Lift Up'       },
+  { key:'get_creative',  label:'Get Creative'  },
+  { key:'get_social',    label:'Get Social'    },
+  { key:'pain_body',     label:'Pain & Body'   },
+  { key:'just_happy',    label:'Just Happy'    },
+  { key:'aphrodisiac',   label:'Aphrodisiac'   },
+];
+
+let allStrains    = [];
+let researchCache = {};
+let currentFilter = 'all';
+let currentId     = null;
+
+function loadStrains()  { try { return JSON.parse(localStorage.getItem(LS_STRAINS))  || null; } catch { return null; } }
+function saveStrains()  { localStorage.setItem(LS_STRAINS,  JSON.stringify(allStrains)); }
+function loadResearch() { try { return JSON.parse(localStorage.getItem(LS_RESEARCH)) || {}; }  catch { return {}; } }
+function saveResearch() { localStorage.setItem(LS_RESEARCH, JSON.stringify(researchCache)); }
+function getApiKey()    { return localStorage.getItem(LS_APIKEY) || ''; }
+
+const DEFAULT_RESEARCH = {
+  'pineapples-in-space-4': {
+    lineage: "Pineapples in Space #4 is a Pigtail Gardens original cross, reportedly combining a tropical Pineapple-derived sativa hybrid with a heavy-hitting indica. The exact genetic lineage is kept proprietary by Pigtail Gardens, but the profile suggests influence from Pineapple Express or similar tropical lines crossed with an OG or Kush-based backbone.",
+    misc: "Pigtail Gardens pheno #4 of this line was selected for its standout tropical fruit expression and balanced high. A collector favorite for its eye-catching appearance — typically dense buds with bright pistils and a heavy coat of trichomes that glitter under light.",
+    terpene_profile: "Myrcene, Caryophyllene, Ocimene, Limonene",
+    aroma: "Bright pineapple and mango burst on the front with a creamy, almost milky sweetness underneath. A faint herbal and earthy base keeps the tropical notes grounded.",
+    effects: "Uplifting sativa-leaning onset that transitions into a relaxed, body-melting indica finish. Great for daytime use with social or creative activities before evening wind-down.",
+    therapeutic: "May help with stress, mild depression, fatigue, and appetite stimulation. The terpene profile suggests anti-inflammatory potential.",
+    negative: "Possible dry mouth, dry eyes, and mild anxiety at higher doses due to sativa influence.",
+    grow_notes: "Medium height with moderate branching. Finishes in approximately 9–10 weeks flowering. Responds well to LST and light defoliation. Heavy feeder — watch for slight nitrogen deficiencies in late veg. Produces dense, sticky colas with excellent bag appeal.",
+    rosin_extraction: "Excellent rosin candidate. The trichome density and terpene richness yield a golden, saucy rosin. Press at 185–195°F with a 90-micron bag for best results. Expect 18–24% return with good starting material.",
+    mood_ratings: { Creative: 8, Energetic: 7, Focused: 6, Euphoric: 9, Relaxed: 7, Sleepy: 4, Hungry: 6, Social: 8 }
+  },
+  'rainbow-runtz': {
+    lineage: "Rainbow Runtz descends from the legendary Runtz lineage (Zkittlez × Gelato), with Pigtail Gardens selecting a particularly vibrant phenotype known for its multicolored bud structure and candy-forward terpene profile. The Rainbow designation comes from the spectrum of hues expressed during late flower.",
+    misc: "One of Pigtail Gardens' most visually striking offerings. Buds display purple, green, and orange hues with a dense frost layer. The rainbow color expression is best achieved with a late-flower temperature drop. High demand in dispensaries for its shelf appeal alone.",
+    terpene_profile: "Limonene, Caryophyllene, Linalool, Myrcene",
+    aroma: "Candy shop sweetness with grape, citrus, and a subtle floral note. Reminiscent of a fruit punch mixed with fresh flowers. Very pungent — even a small amount fills a room.",
+    effects: "Euphoric and mood-elevating with a smooth, creamy body high. Balanced hybrid that leans slightly indica. Social, giggly, and creative at moderate doses; deeply relaxing at higher doses.",
+    therapeutic: "Useful for mood disorders, stress, mild pain, and insomnia (at higher doses). Linalool provides anxiolytic effects.",
+    negative: "Dry mouth is common. Can cause couch-lock at high doses. Some users report paranoia in large quantities.",
+    grow_notes: "Compact and bushy, ideal for SCROG or SOG setups. 8–9 week flower time. Benefits from a temperature drop to 60–65°F in the last 2 weeks to bring out full color expression. Medium-high yielder. Keep humidity below 50% in flower to prevent mold in dense colas.",
+    rosin_extraction: "Outstanding rosin producer. The heavy resin coating and candy terpenes make for a flavorful, terpy press. Use 73–90 micron bags at 180–190°F. Expect 20–26% return. The rosin retains the fruit-candy flavor remarkably well.",
+    mood_ratings: { Creative: 7, Energetic: 6, Focused: 5, Euphoric: 9, Relaxed: 8, Sleepy: 5, Hungry: 7, Social: 9 }
+  },
+  'jam-pack-2': {
+    lineage: "Jam Pack #2 is a Pigtail Gardens selection from a cross believed to involve fruity, jam-like genetics — possibly combining a Zkittlez or Sherbet derivative with a dense, resinous indica. Pheno #2 was hand-selected for its concentrated berry and stone fruit aroma.",
+    misc: "The name says it all — this strain is jam-packed with flavor and effect. Pigtail Gardens pheno #2 stands out in the lineup for its dense bud structure and unusually high resin content. A grower's dream and a hash maker's favorite.",
+    terpene_profile: "Myrcene, Caryophyllene, Terpinolene, Linalool",
+    aroma: "Rich mixed berry jam — blackberry, blueberry, and raspberry — with a creamy, pastry-like sweetness. Earthy undertone adds depth and complexity.",
+    effects: "Heavy, indica-dominant relaxation with a wave of euphoria on onset. Full body melt that builds gradually. Best reserved for evening or nighttime use.",
+    therapeutic: "Excellent for chronic pain, muscle spasms, insomnia, and anxiety. High myrcene content amplifies sedative effects.",
+    negative: "Significant couch-lock potential. Dry mouth and dry eyes are common. Not recommended before tasks requiring focus or energy.",
+    grow_notes: "Short and stocky indica structure, very resistant to physical stress. 8–9 week flower. Stack multiple tops via topping or mainlining. Very heavy feeder — cal-mag supplementation is beneficial. Watch for bud rot in humid environments due to cola density.",
+    rosin_extraction: "Top-tier rosin strain. Extreme resin glands and a rich terpene matrix make for a thick, jam-like rosin press. 73–90 micron bags at 185–195°F. Expect 22–28% return. Color ranges from gold to amber. Exceptional flavor retention.",
+    mood_ratings: { Creative: 4, Energetic: 3, Focused: 4, Euphoric: 7, Relaxed: 9, Sleepy: 8, Hungry: 8, Social: 5 }
+  },
+  'kryptochronic': {
+    lineage: "Kryptochronic is a Pigtail Gardens proprietary cross drawing on OG Kush and Chronic heritage — a nod to the classic 'Kronic' phenotypes of the early 2000s that were known for their extreme potency. The exact cross is held close by Pigtail Gardens but OG, Hash Plant, and Northern Lights influence is evident in the growth structure.",
+    misc: "A tribute to the legendary 'chronic' genetics of cannabis culture. Kryptochronic has a mysterious green aura and hits like the Kryptonite of weed — powerful, disorienting (in the best way), and unforgettable. Dense, lime-green nugs with a nuclear trichome count.",
+    terpene_profile: "Myrcene, Caryophyllene, Humulene, Pinene",
+    aroma: "Fuel, pine, and a sharp earthy skunk. Hints of lemon and hash underneath. The classic 'dank' smell that old-school connoisseurs will immediately recognize.",
+    effects: "Heavy cerebral onset with a strong body stone. Classic OG-style high — mentally hazy, physically immobilizing. Potent and long-lasting. Not for novice users.",
+    therapeutic: "Effective for severe pain, muscle tension, PTSD, and sleep disorders. High caryophyllene content may provide anti-inflammatory benefits.",
+    negative: "Intense couch-lock, dry mouth, dry eyes. Can cause dizziness or paranoia in high doses or for inexperienced users.",
+    grow_notes: "Classic indica-dominant structure, short and wide. 8–9 weeks flower. Requires strong support — colas get heavy. Resistant to pests. Thrive on heavy feeding schedules. May show slight yellowing in late flower — normal senescence, not a deficiency.",
+    rosin_extraction: "Very good rosin producer with a classic hash aroma. Press at 190–200°F with 90-micron bags. Yields 18–22%. The rosin has a classic earthy-fuel character reminiscent of old-school hash.",
+    mood_ratings: { Creative: 4, Energetic: 3, Focused: 3, Euphoric: 7, Relaxed: 9, Sleepy: 9, Hungry: 8, Social: 4 }
+  },
+  'cherry-jealousy': {
+    lineage: "Cherry Jealousy combines Cherry genetics (likely Cherry Pie or Cherry AK) with Jealousy (Sherbert Bx1 × Gelato 41), a strain that has rapidly become one of the most sought-after in the modern market. Pigtail Gardens' cut emphasizes the cherry and cream notes while adding depth from the Jealousy backbone.",
+    misc: "Jealousy genetics have taken the cannabis world by storm, and Cherry Jealousy is Pigtail Gardens' fruit-forward spin on it. Expect gas-meets-cherry in a package that smells like a cherry soda being poured through a fuel pump — in the best possible way.",
+    terpene_profile: "Caryophyllene, Limonene, Linalool, Myrcene",
+    aroma: "Cherry candy upfront with a sweet, creamy base and a fuel/gas undertone. Some phenotypes lean more toward cherry pie, others toward cherry cough drop. Rich and complex.",
+    effects: "Balanced hybrid effect — uplifting and creative at onset, transitioning to a warm, full-body relaxation. Sociable and mood-boosting without overwhelming sedation.",
+    therapeutic: "Good for depression, anxiety, stress, and mild pain. The balanced profile makes it versatile for day-to-evening use.",
+    negative: "Mild dry mouth and eyes. Some users report slight racing thoughts at higher doses due to the Gelato influence.",
+    grow_notes: "Medium height, vigorous growth. 9-week flower. Benefits from training — responds well to LST and topping. Expect above-average resin production. Color can shift to burgundy-red in late flower with temp drop. Good mold resistance.",
+    rosin_extraction: "Solid rosin strain. Cherry terpenes carry through the press well. Use 73–90 micron bags at 185–195°F. Expect 19–24% return. Rosin is often a light amber with an unmistakable cherry-gas scent.",
+    mood_ratings: { Creative: 8, Energetic: 7, Focused: 6, Euphoric: 9, Relaxed: 7, Sleepy: 4, Hungry: 6, Social: 8 }
+  },
+  'lipsmackerz': {
+    lineage: "Lipsmackerz is a Pigtail Gardens creation rooted in dessert-style genetics, likely involving Runtz, Zkittlez, or a candy-forward Cookies descendant. The name references the mouth-watering, saliva-inducing aroma and flavor that makes you involuntarily smack your lips.",
+    misc: "Few strains live up to their names as completely as Lipsmackerz. The terpene expression is so sweet and fruity it borders on artificial — but every bit of it is natural. A crowd-pleasing strain that consistently gets the 'what strain is THAT?' reaction.",
+    terpene_profile: "Limonene, Caryophyllene, Linalool, Ocimene",
+    aroma: "Tropical candy — mango, peach, and citrus wrapped in a sugary, candy-coated sweetness. Think exotic fruit gummies. Extremely fragrant with excellent room-filling presence.",
+    effects: "Bright, euphoric sativa-leaning onset with a mood-boosting, energetic quality. Settles into a gentle body relaxation. Excellent daytime or social strain.",
+    therapeutic: "Good for mood elevation, fatigue, mild anxiety, and social discomfort. The citrus-forward profile may provide focus-enhancing effects.",
+    negative: "Can cause dry mouth and mild anxiety at high doses. The energetic onset may not be suitable for severe anxiety.",
+    grow_notes: "Taller, sativa-leaning growth habit. Benefits from early topping and training. 9–10 week flower. Aromas are intense — odor control is essential. Moderate yielder but high bag appeal makes it worth the grow.",
+    rosin_extraction: "Good rosin candidate, especially for flavor-focused extractions. Use 90-micron bags at 180–190°F. Expect 17–22% return. The rosin is light golden and extremely aromatic — the candy terpenes survive the press beautifully.",
+    mood_ratings: { Creative: 8, Energetic: 8, Focused: 6, Euphoric: 9, Relaxed: 6, Sleepy: 3, Hungry: 7, Social: 9 }
+  },
+  'limecicle': {
+    lineage: "Limecicle draws from citrus-heavy genetics — likely a cross involving Lime Sherbert, Super Lemon Haze, or a Citrus Kush line. Pigtail Gardens bred for maximum lime expression, resulting in a strain that smells and tastes almost exactly like a frozen lime popsicle.",
+    misc: "Limecicle is Pigtail Gardens' most citrus-forward offering. It's refreshing, zesty, and immediately distinctive. A great summer strain and a palate cleanser for connoisseurs accustomed to heavier, gassier cultivars.",
+    terpene_profile: "Terpinolene, Limonene, Ocimene, Myrcene",
+    aroma: "Lime zest, lemon candy, and a cool, creamy vanilla backdrop — like a key lime pie meets a lime creamsicle. Tart and bright with an almost citrus cleaning product edge (in the best way).",
+    effects: "Uplifting, clear-headed, and energizing. Strongly sativa-leaning with a light body tingle. Promotes focus and motivation. The high is clean and functional without being overwhelming.",
+    therapeutic: "Excellent for daytime depression, fatigue, ADHD-style focus issues, and social anxiety. The terpinolene/limonene combo is known for clarity and mood lift.",
+    negative: "Can cause slight anxiety or racing thoughts in high doses. Dry mouth is common with citrus-terpene-heavy strains.",
+    grow_notes: "Sativa-leaning structure — taller with more internode spacing. Top early and train hard. 9–10 week flower. Citrus aroma intensifies dramatically in the last 3 weeks. Moderate yields but exceptional aroma and bag appeal.",
+    rosin_extraction: "Moderate rosin performer. The terpinolene-heavy profile can make yields slightly lower than resin-dense indicas, but the flavor payoff is extraordinary. Press at 175–185°F with a 90-micron bag. Expect 15–20% return. The rosin smells exactly like fresh lime.",
+    mood_ratings: { Creative: 7, Energetic: 9, Focused: 8, Euphoric: 8, Relaxed: 5, Sleepy: 2, Hungry: 5, Social: 7 }
+  },
+  'papayamosa': {
+    lineage: "Papayamosa is a Pigtail Gardens original, blending Papaya (Nirvana Seeds' classic tropical indica) with a Mimosa (Purple Punch × Clementine) derivative. The result is a tropical, citrus-meets-papaya experience with excellent balance between sativa brightness and indica body.",
+    misc: "The brunch strain. Papayamosa evokes a champagne glass full of tropical fruit — mimosa-like effervescence meets lush papaya sweetness. Consistently beautiful buds with orange and gold hues and a generous terpene coat.",
+    terpene_profile: "Myrcene, Caryophyllene, Limonene, Terpinolene",
+    aroma: "Sweet papaya and orange citrus with a light floral effervescence. There's a tropical juice quality that's both bright and creamy — mango orange papaya smoothie.",
+    effects: "Euphoric and uplifting at onset with a smooth, enjoyable body relaxation. A true daytime hybrid — functional and joyful without sedation. Excellent for creative work or social activities.",
+    therapeutic: "Good for stress, mild depression, fatigue, and social anxiety. The terpene mix supports mood elevation without overstimulation.",
+    negative: "Dry mouth, occasional dry eyes. Very few negatives — one of the more side-effect-friendly strains in this lineup.",
+    grow_notes: "Medium height, strong branching. Finishes in 9 weeks. Great for beginner growers — forgiving and resilient. Above-average yields with moderate feeding. Excellent mold and pest resistance. Will stretch slightly in first weeks of flower.",
+    rosin_extraction: "Very good rosin strain. Tropical terpenes hold up well under heat. Use 73–90 micron bags at 185–195°F. Expect 20–25% return. Rosin is golden with a fresh tropical scent that's immediately distinguishable.",
+    mood_ratings: { Creative: 8, Energetic: 7, Focused: 6, Euphoric: 9, Relaxed: 7, Sleepy: 3, Hungry: 6, Social: 9 }
+  },
+  'nana-glue': {
+    lineage: "Nana Glue combines Banana genetics (likely Banana OG or Banana Punch) with the legendary Gorilla Glue #4 (now called GG4 or Original Glue). The result is a potent, resin-dripping hybrid that brings together GG4's famous adhesive trichome production with a sweet banana cream terpene profile.",
+    misc: "GG4 is one of the most awarded strains in cannabis history, known for gluing users to the couch and growers to their plants. Nana Glue takes that foundation and adds a sweet, banana-forward twist that makes the experience more approachable while keeping the knockout power.",
+    terpene_profile: "Myrcene, Caryophyllene, Humulene, Limonene",
+    aroma: "Banana cream, diesel fuel, and earth. The banana is sweet and ripe — not artificial. Underneath is the classic GG4 earthiness and a touch of mocha or dark roast coffee.",
+    effects: "Potent and long-lasting full-body effect. Cerebral buzz gives way to deep physical relaxation and eventual sedation. Classic evening or night strain. Not for first-timers.",
+    therapeutic: "Highly effective for chronic pain, insomnia, anxiety, and muscle tension. One of the stronger therapeutic options in this collection.",
+    negative: "Strong couch-lock. Dry mouth and dry eyes. Can cause disorientation or paranoia in novice users or very high doses.",
+    grow_notes: "Moderate height with thick stems — GG4 structure throughout. 9–10 week flower. Resin production is exceptional — scissors and surfaces will be coated. Medium-high feeder. Watch for heavy bud weight requiring support. Mold-resistant.",
+    rosin_extraction: "Elite rosin strain. GG4 genetics are famous for exceptional extract yields. Press at 190–200°F with 73–90 micron bags. Expect 24–30% return. Rosin is thick, sappy, and amber — excellent sauce consistency if cold-cured.",
+    mood_ratings: { Creative: 4, Energetic: 3, Focused: 3, Euphoric: 7, Relaxed: 9, Sleepy: 9, Hungry: 9, Social: 5 }
+  },
+  'cream-smoothie': {
+    lineage: "Cream Smoothie is a Pigtail Gardens dessert-style cross believed to involve Cookies and Cream (Starfighter × Girl Scout Cookies) or a similar Cookies derivative crossed with a creamy, sweet indica. The profile is thick, rich, and indulgent.",
+    misc: "Exactly what the name promises. Cream Smoothie is a thick, creamy, dessert-style strain that envelops the senses in richness. The buds are typically dense and frosted with a milky trichome layer that reinforces the cream motif.",
+    terpene_profile: "Myrcene, Linalool, Caryophyllene, Bisabolol",
+    aroma: "Creamy vanilla, sweet cream, and a light nutty-cookie base. Like a vanilla milkshake with a hint of baked goods. Soft and enveloping rather than sharp or pungent.",
+    effects: "Smooth, gentle relaxation. Indica-dominant with a pleasant euphoric softness rather than a harsh body slam. Great for evening relaxation, creative daydreaming, or gentle social settings.",
+    therapeutic: "Good for anxiety, mild pain, stress, and sleep prep. The linalool and bisabolol combination makes this particularly soothing.",
+    negative: "Mild couch-lock at higher doses. Dry mouth. The sedative quality makes it unsuitable for daytime productivity.",
+    grow_notes: "Compact and manageable — good for smaller grow spaces. 8–9 week flower. Medium feeder. Responds well to topping and LST. Trichome coverage is excellent. Cure for at least 4–6 weeks post-harvest to fully develop the cream and vanilla notes.",
+    rosin_extraction: "Excellent rosin strain for flavor-focused pressing. The creamy terpenes survive the press beautifully. Use 73-micron bags at 180–190°F for a terp-rich, lighter press. Expect 19–24% return. Rosin is light gold with a silky, vanilla-cream aroma.",
+    mood_ratings: { Creative: 6, Energetic: 4, Focused: 5, Euphoric: 7, Relaxed: 9, Sleepy: 7, Hungry: 7, Social: 6 }
+  },
+  'grease-monkey': {
+    lineage: "Grease Monkey (Gorilla Glue #4 × Cookies and Cream) is a well-established cultivar from Exotic Genetix, brought into the Pigtail Gardens lineup for its legendary combination of resin production, potency, and diesel-cookie flavor. A classic modern hybrid that needs no introduction.",
+    misc: "Grease Monkey earned its reputation as one of the top indica-dominant hybrids of the 2010s and remains a staple for serious growers and extract artists. The combination of GG4 power with Cookies sweetness created something enduring. Pigtail Gardens carries a well-verified cut of this iconic strain.",
+    terpene_profile: "Myrcene, Caryophyllene, Limonene, Humulene",
+    aroma: "Diesel and fuel with sweet cookie dough and a vanilla-earthy finish. Pungent, complex, and immediately recognizable. The sweetness balances the fuel edge perfectly.",
+    effects: "Heavy indica-dominant relaxation with a sedating, long-lasting body stone. Cerebral cloudiness. Best suited for evening and nighttime. Can induce a powerful, thoughtful mental state before full sedation.",
+    therapeutic: "Very effective for pain, insomnia, PTSD, and appetite loss. One of the most reliable therapeutic strains in this collection.",
+    negative: "Strong couch-lock. Dry mouth, dry eyes. Can cause anxiety in sativa-sensitive users. Not for daytime use.",
+    grow_notes: "Vigorous grower, medium-tall. 8–9 week flower. Resin production is exceptional — GG genetics show strongly. Heavy feeder and heavy yielder. One of the highest-yielding strains in this collection when grown well. Strong main colas benefit from staking.",
+    rosin_extraction: "Exceptional rosin performer. Grease Monkey is a staple for commercial solventless extractors. Press at 190–200°F with 73–90 micron bags. Expect 22–28% return. Rosin is dark amber with a fuel-cookie aroma that's incredibly complex.",
+    mood_ratings: { Creative: 4, Energetic: 3, Focused: 3, Euphoric: 7, Relaxed: 9, Sleepy: 9, Hungry: 8, Social: 4 }
+  },
+  'blue-nerdz': {
+    lineage: "Blue Nerdz combines Blueberry genetics (DJ Short's classic) with a Nerdz (also called Nerds or Grape Nerdz) line — a candy-forward strain derived from Grape Ape and similar sweet-grape genetics. The combination doubles down on the sweet berry-grape candy profile.",
+    misc: "Blue Nerdz looks like it was designed to win cannabis cups — deep purple and blue hues, a candy-sweet aroma, and a bag appeal that photographs exceptionally well. Pigtail Gardens' version emphasizes the blueberry candy side, creating something that smells like blue raspberry candy.",
+    terpene_profile: "Myrcene, Linalool, Caryophyllene, Ocimene",
+    aroma: "Blue raspberry candy, blueberry muffin, and a grape-sweet finish. Reminiscent of Nerd Ropes or blueberry bubblegum. Sweet, artificial-seeming but completely natural.",
+    effects: "Relaxing indica-dominant high with a pleasant, mood-boosting onset. Sociable and comfortable. Transitions into a calm, restful state. Great for late afternoon or early evening.",
+    therapeutic: "Useful for anxiety, stress, mild depression, and sleep initiation. The linalool provides anxiolytic support.",
+    negative: "Possible dry mouth and drowsiness. Couch-lock at higher doses. Some users experience slight headache.",
+    grow_notes: "Medium height with good branching. 8–9 week flower. The blue and purple hues develop best with a temperature drop in late flower (below 65°F nights). Moderate feeder. Good mold resistance. Compact, dense buds with beautiful coloration.",
+    rosin_extraction: "Good rosin producer with outstanding flavor. Press at 180–190°F with 73–90 micron bags. Expect 18–23% return. Rosin takes on a purple-gold hue and retains the blueberry candy aroma well.",
+    mood_ratings: { Creative: 6, Energetic: 5, Focused: 5, Euphoric: 8, Relaxed: 8, Sleepy: 6, Hungry: 7, Social: 7 }
+  },
+  'jet-fuel-og': {
+    lineage: "Jet Fuel OG (also known as G6) is a cross of Aspen OG and High Country Diesel, created by 303 Seeds. It's been widely propagated and popularized for its extreme sour-fuel terpene profile and functional, energizing hybrid effects that defy its diesel fuel name.",
+    misc: "Despite the name, Jet Fuel OG doesn't knock you out — it launches you. One of the most energizing fuel-terpene strains available, Jet Fuel OG is beloved by sativa lovers who want gas without the indica heaviness. A classic in Colorado dispensaries.",
+    terpene_profile: "Terpinolene, Caryophyllene, Ocimene, Myrcene",
+    aroma: "Pure diesel and jet fuel with a subtle sour citrus edge. The aroma is bold, sharp, and petroleum-forward — exactly what the name suggests. One of the most authentically 'fuel' strains available.",
+    effects: "Stimulating, energetic, and uplifting. Clear-headed cerebral focus with minimal body weight. Excellent for daytime productivity, exercise, or creative work. The OG touch provides a subtle earthy grounding.",
+    therapeutic: "Good for fatigue, depression, ADHD, and daytime pain management without sedation. The terpinolene profile supports focus and energy.",
+    negative: "Can cause anxiety or paranoia in sensitive users due to the energizing, stimulating nature. Dry mouth is common.",
+    grow_notes: "Sativa-leaning structure, taller with longer internode spacing. Benefits from heavy training. 9–10 week flower. The diesel terpenes intensify dramatically in the final 2–3 weeks. Odor control is critical. Moderate yielder.",
+    rosin_extraction: "Moderate rosin performer — yields are not the highest, but the flavor is unmatched for fuel-lovers. Press at 180–190°F with 90-micron bags. Expect 16–21% return. Rosin is light amber with an intense fuel-sour aroma.",
+    mood_ratings: { Creative: 8, Energetic: 9, Focused: 9, Euphoric: 8, Relaxed: 5, Sleepy: 2, Hungry: 5, Social: 7 }
+  },
+  'blue-dream': {
+    lineage: "Blue Dream (Blueberry × Haze) is one of the most famous and widely grown strains in cannabis history, originating in California. DJ Short's Blueberry crossed with a Super Silver Haze phenotype created the quintessential balanced hybrid — gentle enough for beginners, satisfying enough for veterans.",
+    misc: "Blue Dream has been the best-selling strain in legal US markets for multiple consecutive years. Its popularity is not a coincidence — it offers consistent, reliable, approachable effects with a pleasant flavor profile. Pigtail Gardens carries a verified, well-grown cut of this legendary cultivar.",
+    terpene_profile: "Myrcene, Caryophyllene, Pinene, Terpinolene",
+    aroma: "Sweet blueberry, light floral haze, and a fresh piney backdrop. Clean, mild, and inviting. Not as pungent as many modern strains — approachable and pleasant.",
+    effects: "Balanced, gentle euphoria with a motivating mental clarity and a light, pleasant body sensation. The gold standard for approachable hybrid effects — functional, joyful, and smooth.",
+    therapeutic: "Excellent for beginners, anxiety, depression, mild pain, and nausea. The balanced profile makes it one of the most broadly therapeutic strains in this collection.",
+    negative: "Dry mouth, occasional dry eyes. Some users report slight headache. The haze genetics can cause mild anxiety in very sensitive users.",
+    grow_notes: "Classic sativa structure — tall with long internodes. Top aggressively early and train hard. 9–10 week flower. One of the highest-yielding strains in this collection — the haze genetics push productivity. Easy to grow and very forgiving.",
+    rosin_extraction: "Decent rosin performer. Not the highest yields, but reliable and consistent. Press at 185–195°F with 90-micron bags. Expect 16–21% return. Rosin is light gold with a subtle berry-haze aroma.",
+    mood_ratings: { Creative: 8, Energetic: 7, Focused: 7, Euphoric: 8, Relaxed: 7, Sleepy: 3, Hungry: 6, Social: 8 }
+  },
+  'pre-98-bubba-kush': {
+    lineage: "Pre-98 Bubba Kush is a legendary OG Kush phenotype that predates the widely distributed post-1998 Bubba Kush cuts. Believed to be a Hindu Kush × OG cross, it was circulated in California's early medical cannabis scene. The 'Pre-98' designation indicates this is from the original, pre-commercialization genetic line.",
+    misc: "Pre-98 Bubba Kush is considered by many old-school connoisseurs to be the definitive Bubba Kush — a strain with cultural and historical significance in cannabis. Known for its squat structure, extreme potency, and the most authentic 'Kush' aroma available. Not for beginners.",
+    terpene_profile: "Myrcene, Caryophyllene, Humulene, Pinene",
+    aroma: "Deep, dank Kush — hash, earth, pine, and spice with a subtle chocolate-coffee backdrop. The most authentically 'kushy' aroma in this collection. Old-school, classic, and unmistakable.",
+    effects: "Deeply sedating, full-body indica stone. Heavy, long-lasting, and powerful. Hits fast and builds over 30–45 minutes. Purely a nighttime strain. Can cause introspective mental states before deep relaxation.",
+    therapeutic: "Among the most therapeutic strains for severe pain, PTSD, insomnia, and muscle spasms. A staple for serious medical cannabis users.",
+    negative: "Heavy couch-lock, dry mouth, dry eyes, and next-morning grogginess. Disorientation at high doses. Not appropriate for daytime or beginners.",
+    grow_notes: "Classic Kush structure — very short and compact with wide fan leaves. 8–9 week flower. Extremely dense buds — watch for bud rot in high humidity. Very heavy feeder. Slow but reliable grower. The hash aroma develops fully only with a proper 60+ day cure.",
+    rosin_extraction: "World-class rosin strain. Kush genetics have always produced exceptional hash and rosin. Press at 185–200°F with 73–90 micron bags. Expect 22–28% return. Rosin is dark amber to brown — thick, hash-like, and extraordinary in flavor.",
+    mood_ratings: { Creative: 3, Energetic: 2, Focused: 3, Euphoric: 6, Relaxed: 9, Sleepy: 10, Hungry: 8, Social: 3 }
+  },
+  'skywalker-og': {
+    lineage: "Skywalker OG (Skywalker × OG Kush) is a cross created by Dutch Passion and Darkhorse Genetics. Skywalker itself (Blueberry × Mazar) brings sweetness and indica growth structure, while OG Kush adds the classic West Coast fuel and earthiness. The result is a heavy, classic OG-style indica with a touch of sweetness.",
+    misc: "The force is strong with this one. Skywalker OG is named for its powerful, out-of-this-world effect profile. A favorite among OG Kush fans who want extra power and a slight sweetness. Consistently appears on 'most potent' lists and is a go-to for those needing serious relief.",
+    terpene_profile: "Myrcene, Caryophyllene, Limonene, Linalool",
+    aroma: "Classic OG fuel and earthy spice with a sweet, blueberry-sweet backdrop from the Skywalker heritage. Complex, layered, and deeply satisfying for OG fans.",
+    effects: "Powerful, slow-building body stone with an initial cerebral clarity that fades into deep physical relaxation and sleep. One of the most reliably sedating strains in this collection.",
+    therapeutic: "Excellent for pain, insomnia, anxiety, PTSD, and muscle tension. The OG + indica combination provides comprehensive body relief.",
+    negative: "Heavy couch-lock. Dry mouth, dry eyes. Dizziness at high doses. Not appropriate for productivity or daytime use.",
+    grow_notes: "Medium-short indica structure with strong OG vigor. 9–10 week flower. Heavy feeder and heavy yielder. The OG genetics push resin production to impressive levels. Support colas in the last 2–3 weeks — they get very heavy. Cal-mag supplementation recommended.",
+    rosin_extraction: "Outstanding rosin strain. OG genetics reliably perform at the top of any strain lineup. Press at 190–200°F with 73–90 micron bags. Expect 22–27% return. Rosin has the classic OG fuel aroma with a hint of sweet berry.",
+    mood_ratings: { Creative: 4, Energetic: 3, Focused: 4, Euphoric: 7, Relaxed: 9, Sleepy: 9, Hungry: 8, Social: 4 }
+  },
+  'kush-mintz': {
+    lineage: "Kush Mintz (Bubba Kush × Animal Mints) is a creation by Seed Junky Genetics, one of the most influential modern breeders. Animal Mints (Animal Cookies × SinMint Cookies) brings a minty, fuel-cookie complexity, while Bubba Kush grounds it with deep indica sedation. The result is one of the most unique flavor profiles in modern cannabis.",
+    misc: "Kush Mintz has achieved near-legendary status in the modern cannabis market — a true collector's strain. The mint-kush flavor combination is unlike anything else, and the effects are powerful and nuanced. Seed Junky Genetics created something special with this cross, and it remains highly sought-after.",
+    terpene_profile: "Caryophyllene, Limonene, Linalool, Myrcene",
+    aroma: "Cool mint and vanilla cookie with a deep Kush earthiness underneath. There's a gas-fuel note that bridges the Bubba Kush heritage with the Animal Mints complexity. Like an Andes mint dipped in earth and fuel.",
+    effects: "Potent indica-dominant high with a distinctive minty mental clarity at onset before transitioning to deep body relaxation. More cerebral and nuanced than typical indicas at first, then deeply sedating.",
+    therapeutic: "Excellent for pain, insomnia, anxiety, and stress. The unique combination of caryophyllene and linalool provides both anti-inflammatory and anxiolytic support.",
+    negative: "Heavy couch-lock in the later phase. Dry mouth, dry eyes. The initial cerebral onset may cause slight anxiety in very sensitive users.",
+    grow_notes: "Medium height with good structure. 9–10 week flower. Demanding feeder — responds exceptionally well to proper nutrient management. Resin production is exceptional. The mint aroma develops fully in the last 3–4 weeks of flower. Cure for 60+ days for full flavor development.",
+    rosin_extraction: "Top-tier rosin strain. Kush Mintz is used by some of the best solventless extractors in the industry. Press at 185–200°F with 73–90 micron bags. Expect 21–27% return. Rosin is light amber to gold with the most distinctive mint-kush aroma of any rosin in this collection.",
+    mood_ratings: { Creative: 6, Energetic: 4, Focused: 5, Euphoric: 8, Relaxed: 9, Sleepy: 8, Hungry: 7, Social: 5 }
+  }
+};
+
+function init() {
+  const saved = loadStrains();
+  allStrains    = saved || JSON.parse(JSON.stringify(DEFAULT_STRAINS));
+  researchCache = loadResearch();
+  if (!saved) saveStrains();
+  if (Object.keys(researchCache).length === 0) {
+    researchCache = JSON.parse(JSON.stringify(DEFAULT_RESEARCH));
+    saveResearch();
+  }
+  updateKeyIndicator();
+  renderGrid();
+}
+
+function loadStrainImg(el, id) {
+  el.style.display = 'none';
+  el.onload  = () => { el.style.display = 'block'; };
+  el.onerror = () => {
+    if (!el.dataset.triedPng) {
+      el.dataset.triedPng = '1';
+      el.src = `images/strains/${id}.png?v=3`;
+    } else {
+      el.style.display = 'none';
+    }
+  };
+  el.src = `images/strains/${id}.jpg?v=3`;
+}
+
+function renderGrid() {
+  const grid = document.getElementById('strain-grid');
+  const ce   = document.getElementById('strain-count');
+  const strains = currentFilter === 'all' ? allStrains : allStrains.filter(s => s.status === currentFilter);
+  ce.textContent = `${strains.length} strain${strains.length !== 1 ? 's' : ''}`;
+  if (!strains.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-glyph">&#127807;</div><div class="empty-text">No ${currentFilter !== 'all' ? currentFilter + ' ' : ''}strains yet.</div></div>`;
+    return;
+  }
+  grid.innerHTML = strains.map(s => {
+    const sc  = s.status.replace(' ', '-');
+    const res = researchCache[s.id];
+    const topMood = res?.mood_ratings ? getTopMood(res.mood_ratings) : null;
+    return `<div class="strain-card" onclick="openDetail('${s.id}')">
+      <img class="card-img" data-id="${s.id}" alt="${esc(s.name)}">
+      <div class="card-body">
+        <div class="card-top">
+          <div><div class="card-name">${esc(s.name)}</div><div class="card-breeder">${esc(s.breeder)}</div></div>
+          <span class="status-tag ${sc}">${esc(s.status)}</span>
+        </div>
+        ${s.notes ? `<div class="card-notes">${esc(s.notes)}</div>` : ''}
+        <div class="card-footer">
+          <span class="card-date">${s.added}</span>
+          ${topMood ? `<span class="card-researched">&#x2726; ${esc(topMood)}</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  grid.querySelectorAll('.card-img[data-id]').forEach(img => loadStrainImg(img, img.dataset.id));
+}
+
+function getTopMood(ratings) {
+  const top = Object.entries(ratings).sort((a,b) => b[1]-a[1])[0];
+  if (!top) return null;
+  const mood = MOODS.find(m => m.key === top[0]);
+  return mood ? mood.label : null;
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGrid();
+}
+
+function openDetail(id) {
+  currentId = id;
+  const strain = allStrains.find(s => s.id === id);
+  if (!strain) return;
+  document.getElementById('modal-name').textContent    = strain.name;
+  document.getElementById('modal-breeder').textContent = strain.breeder;
+  const tag = document.getElementById('modal-status-tag');
+  tag.textContent = strain.status;
+  tag.className   = `status-tag ${strain.status.replace(' ', '-')}`;
+  document.getElementById('modal-status-select').value = strain.status;
+  const heroImg = document.getElementById('modal-strain-img');
+  heroImg.alt = strain.name;
+  delete heroImg.dataset.triedPng;
+  loadStrainImg(heroImg, id);
+  showOverlay('detail-modal');
+  if (researchCache[id]) { renderResearch(researchCache[id], strain); return; }
+  showGeneratePanel(strain);
+}
+
+function closeDetailModal() {
+  hideOverlay('detail-modal');
+  document.getElementById('research-tabs').classList.add('hidden');
+  const heroImg = document.getElementById('modal-strain-img');
+  heroImg.style.display = 'none';
+  heroImg.src = '';
+  currentId = null;
+}
+
+function setModalBody(html) {
+  document.getElementById('research-tabs').classList.add('hidden');
+  document.getElementById('modal-body').innerHTML = html;
+}
+
+function showGeneratePanel(strain) {
+  setModalBody(`
+    <div class="generate-panel">
+      <div class="generate-glyph">&#x1F52C;</div>
+      <div class="generate-title">No research yet</div>
+      <div class="generate-desc">Generate a full profile for <strong style="color:var(--text)">${esc(strain.name)}</strong> &mdash; genetics, terpenes, effects, mood ratings, grow notes, and rosin extraction.</div>
+      <button class="btn-generate" onclick="generateResearch()">&#x2726;&nbsp;Generate Research</button>
+    </div>
+    <div style="padding:0 1.6rem 1.5rem;border-top:1px solid var(--border);padding-top:1.25rem">
+      <div class="form-group" style="gap:.45rem">
+        <label class="form-label">My Notes</label>
+        <textarea class="notes-textarea" id="notes-standalone" placeholder="Personal notes, grow observations&hellip;">${esc(strain.notes || '')}</textarea>
+        <div class="notes-actions"><button class="btn btn-outline" onclick="saveNotes()">Save Notes</button></div>
+      </div>
+    </div>`);
+}
+
+function renderResearch(r, strain) {
+  const tabs    = document.getElementById('research-tabs');
+  const body    = document.getElementById('modal-body');
+  const genDate = r.generated_at ? new Date(r.generated_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '&mdash;';
+  const mr = r.mood_ratings || {};
+  const moodBars = MOODS.map(m => {
+    const score = mr[m.key] || 0;
+    const pct   = (score / 10) * 100;
+    return `<div class="mood-row">
+      <span class="mood-label">${esc(m.label)}</span>
+      <div class="mood-bar-wrap"><div class="mood-bar-fill" style="width:${pct}%"></div></div>
+      <span class="mood-score">${score}</span>
+    </div>`;
+  }).join('');
+  const therapeuticPills = (r.therapeutic || '').split(',').map(t => t.trim()).filter(Boolean)
+    .map(t => `<span class="pill pill-green">${esc(t)}</span>`).join('');
+  const negativePills = (r.negative || '').split(',').map(t => t.trim()).filter(Boolean)
+    .map(t => `<span class="pill pill-red">${esc(t)}</span>`).join('');
+  body.innerHTML = `
+    <div class="research-panel active" id="panel-genetics">
+      <div class="research-block"><div class="section-title">&#x1F9EC;&nbsp;Genetics &amp; Lineage</div><div class="research-text">${esc(r.lineage || '&mdash;')}</div></div>
+      <div class="research-block" style="margin-top:1.1rem"><div class="research-block-label">Breeder Notes</div><div class="research-text">${esc(r.misc || '&mdash;')}</div></div>
+    </div>
+    <div class="research-panel" id="panel-terpenes">
+      <div class="research-block"><div class="section-title">&#x1F33F;&nbsp;Terpene Profile</div><div class="research-text">${esc(r.terpene_profile || '&mdash;')}</div></div>
+      <div class="research-block" style="margin-top:1.1rem"><div class="research-block-label">Aroma</div><div class="research-text">${esc(r.aroma || '&mdash;')}</div></div>
+    </div>
+    <div class="research-panel" id="panel-effects">
+      <div class="research-block"><div class="section-title">&#x2728;&nbsp;Effects</div><div class="research-text" style="margin-bottom:.9rem">${esc(r.effects || '&mdash;')}</div></div>
+      <div class="research-block"><div class="research-block-label">Therapeutic</div><div class="pill-list">${therapeuticPills || '<span style="color:var(--faint);font-size:.8rem">&mdash;</span>'}</div></div>
+      <div class="research-block" style="margin-top:.85rem"><div class="research-block-label">Side Effects &amp; Cautions</div><div class="pill-list">${negativePills || '<span style="color:var(--faint);font-size:.8rem">&mdash;</span>'}</div></div>
+    </div>
+    <div class="research-panel" id="panel-moods">
+      <div class="section-title">&#x1F4CA;&nbsp;Mood Ratings</div>
+      <div class="mood-grid">${moodBars}</div>
+      <div class="research-meta">Generated ${genDate} &middot; Claude AI</div>
+    </div>
+    <div class="research-panel" id="panel-grow"><div class="section-title">&#x1FAB4;&nbsp;Grow Notes</div><div class="research-text">${esc(r.grow_notes || '&mdash;')}</div></div>
+    <div class="research-panel" id="panel-rosin"><div class="section-title">&#x1F36F;&nbsp;Rosin &amp; Extraction</div><div class="research-text">${esc(r.rosin_extraction || '&mdash;')}</div></div>
+    <div class="research-panel" id="panel-notes">
+      <div class="section-title">&#x1F4DD;&nbsp;My Notes</div>
+      <textarea class="notes-textarea" id="notes-main" placeholder="Personal grow notes, observations&hellip;">${esc(strain.notes || '')}</textarea>
+      <div class="notes-actions"><button class="btn btn-outline" onclick="saveNotes()">Save Notes</button></div>
+    </div>`;
+  tabs.classList.remove('hidden');
+  tabs.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+  tabs.querySelector('[data-tab="genetics"]').classList.add('active');
+}
+
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.research-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+  const panel = document.getElementById(`panel-${tabId}`);
+  if (panel) panel.classList.add('active');
+  btn.classList.add('active');
+}
+
+async function generateResearch() {
+  if (!currentId) return;
+  const apiKey = getApiKey();
+  if (!apiKey) { toast('Add your Anthropic API key first &#9881;'); openSettings(); return; }
+  const strain = allStrains.find(s => s.id === currentId);
+  setModalBody(`<div class="loading-panel"><div class="spinner"></div>
+    <div class="loading-text">Claude is researching ${esc(strain?.name || 'this strain')}&hellip;</div>
+    <div class="loading-sub">Genetics &middot; Terpenes &middot; Moods &middot; Grow &middot; Rosin</div></div>`);
+  const prompt = `You are a cannabis genetics expert and master craft cultivator specializing in solventless extraction. Generate a detailed research profile for "${strain.name}" by ${strain.breeder}.
+
+Return ONLY valid JSON:
+{
+  "lineage": "Full genetic lineage with breeder background. 1-2 sentences.",
+  "misc": "Breeder info, THC range, bud appearance, best use timing. 2-3 sentences.",
+  "terpene_profile": "Dominant and secondary terpenes, aromas, synergistic interactions. 2-3 sentences.",
+  "aroma": "Vivid and specific aroma description. 1-2 sentences.",
+  "effects": "Onset, intensity, cerebral vs body, duration, mood profile. 2-3 sentences.",
+  "therapeutic": "Medical uses, comma-separated",
+  "negative": "Side effects and cautions, comma-separated",
+  "grow_notes": "Structure, stretch, flowering time, yield, training, VPD/temp/humidity, harvest indicators. 3-4 sentences.",
+  "rosin_extraction": "IWHE and rosin suitability, yield %, press temps in F, wash water temps, final product description. 3-4 sentences.",
+  "mood_ratings": { "wind_down":0, "anxiety_relief":0, "lift_up":0, "get_creative":0, "get_social":0, "pain_body":0, "just_happy":0, "aphrodisiac":0 }
+}
+Score mood_ratings 1-10. Most scores 3-6. Max 3 moods can score 8+. Output only JSON.`;
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key':apiKey, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true', 'content-type':'application/json' },
+      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:2048, messages:[{ role:'user', content:prompt }] }),
+    });
+    if (!resp.ok) { const err = await resp.json().catch(()=>({})); throw new Error(err.error?.message || `HTTP ${resp.status}`); }
+    const data = await resp.json();
+    let content = data.content[0].text.trim();
+    if (content.startsWith('```')) { const lines = content.split('\n'); content = lines.slice(1,-1).join('\n').trim(); }
+    const result = JSON.parse(content);
+    result.generated_at = new Date().toISOString();
+    researchCache[currentId] = result;
+    saveResearch();
+    renderResearch(result, strain);
+    renderGrid();
+    toast('Research generated &#x2726;');
+  } catch (e) {
+    setModalBody(`<div class="generate-panel"><div class="generate-glyph">&#9888;</div><div class="generate-title">Research failed</div><div class="generate-desc">${esc(e.message)}</div><button class="btn-generate" onclick="generateResearch()">Try Again</button></div>`);
+  }
+}
+
+function updateStatus() {
+  if (!currentId) return;
+  const newStatus = document.getElementById('modal-status-select').value;
+  const idx = allStrains.findIndex(s => s.id === currentId);
+  if (idx === -1) return;
+  allStrains[idx].status = newStatus;
+  saveStrains();
+  const tag = document.getElementById('modal-status-tag');
+  tag.textContent = newStatus;
+  tag.className   = `status-tag ${newStatus.replace(' ', '-')}`;
+  renderGrid();
+  toast('Status updated');
+}
+
+function saveNotes() {
+  if (!currentId) return;
+  const el = document.getElementById('notes-main') || document.getElementById('notes-standalone');
+  if (!el) return;
+  const idx = allStrains.findIndex(s => s.id === currentId);
+  if (idx === -1) return;
+  allStrains[idx].notes = el.value;
+  saveStrains();
+  renderGrid();
+  toast('Notes saved');
+}
+
+function confirmDelete() {
+  if (!currentId) return;
+  const strain = allStrains.find(s => s.id === currentId);
+  if (!confirm(`Delete "${strain?.name}"? This cannot be undone.`)) return;
+  allStrains = allStrains.filter(s => s.id !== currentId);
+  delete researchCache[currentId];
+  saveStrains();
+  saveResearch();
+  closeDetailModal();
+  renderGrid();
+  toast('Strain removed');
+}
+
+function openSettings()  { document.getElementById('api-key-input').value = getApiKey(); showOverlay('settings-modal'); }
+function closeSettings() { hideOverlay('settings-modal'); }
+
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (key) localStorage.setItem(LS_APIKEY, key); else localStorage.removeItem(LS_APIKEY);
+  updateKeyIndicator();
+  toast(key ? 'API key saved' : 'API key cleared');
+  closeSettings();
+}
+
+function clearApiKey() {
+  localStorage.removeItem(LS_APIKEY);
+  document.getElementById('api-key-input').value = '';
+  updateKeyIndicator();
+  toast('API key cleared');
+  closeSettings();
+}
+
+function updateKeyIndicator() {
+  const btn = document.getElementById('key-indicator');
+  const set = !!getApiKey();
+  btn.style.color       = set ? 'var(--green-hi)' : 'var(--faint)';
+  btn.style.borderColor = set ? 'var(--green)'    : 'var(--border)';
+  btn.title = set ? 'API key set' : 'API key not set — click to add';
+}
+
+function showOverlay(id) { document.getElementById(id).classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+function hideOverlay(id) {
+  document.getElementById(id).classList.add('hidden');
+  const anyOpen = ['detail-modal','settings-modal'].some(mid => !document.getElementById(mid).classList.contains('hidden'));
+  if (!anyOpen) document.body.style.overflow = '';
+}
+
+document.getElementById('detail-modal').addEventListener('click',  e => { if (e.target===e.currentTarget) closeDetailModal(); });
+document.getElementById('settings-modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeSettings(); });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (!document.getElementById('detail-modal').classList.contains('hidden'))  closeDetailModal();
+  else if (!document.getElementById('settings-modal').classList.contains('hidden')) closeSettings();
+});
+
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.innerHTML = msg;
+  el.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.add('hidden'), 2800);
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+init();
+</script>
+</body>
+</html>
