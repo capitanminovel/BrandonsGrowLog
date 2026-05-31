@@ -304,227 +304,33 @@ function loadResearch() { try { return JSON.parse(localStorage.getItem(LS_RESEAR
 function saveResearch() { localStorage.setItem(LS_RESEARCH, JSON.stringify(researchCache)); }
 function getApiKey()    { return localStorage.getItem(LS_APIKEY) || ''; }
 
-const DEFAULT_RESEARCH = {
-  'pineapples-in-space-4': {
-    lineage: "Pineapples in Space #4 is a Pigtail Gardens original cross, reportedly combining a tropical Pineapple-derived sativa hybrid with a heavy-hitting indica. The exact genetic lineage is kept proprietary by Pigtail Gardens, but the profile suggests influence from Pineapple Express or similar tropical lines crossed with an OG or Kush-based backbone.",
-    misc: "Pigtail Gardens pheno #4 of this line was selected for its standout tropical fruit expression and balanced high. A collector favorite for its eye-catching appearance — typically dense buds with bright pistils and a heavy coat of trichomes that glitter under light.",
-    terpene_profile: "Myrcene, Caryophyllene, Ocimene, Limonene",
-    aroma: "Bright pineapple and mango burst on the front with a creamy, almost milky sweetness underneath. A faint herbal and earthy base keeps the tropical notes grounded.",
-    effects: "Uplifting sativa-leaning onset that transitions into a relaxed, body-melting indica finish. Great for daytime use with social or creative activities before evening wind-down.",
-    therapeutic: "May help with stress, mild depression, fatigue, and appetite stimulation. The terpene profile suggests anti-inflammatory potential.",
-    negative: "Possible dry mouth, dry eyes, and mild anxiety at higher doses due to sativa influence.",
-    grow_notes: "Medium height with moderate branching. Finishes in approximately 9–10 weeks flowering. Responds well to LST and light defoliation. Heavy feeder — watch for slight nitrogen deficiencies in late veg. Produces dense, sticky colas with excellent bag appeal.",
-    rosin_extraction: "Excellent rosin candidate. The trichome density and terpene richness yield a golden, saucy rosin. Press at 185–195°F with a 90-micron bag for best results. Expect 18–24% return with good starting material.",
-    mood_ratings: { Creative: 8, Energetic: 7, Focused: 6, Euphoric: 9, Relaxed: 7, Sleepy: 4, Hungry: 6, Social: 8 }
-  },
-  'rainbow-runtz': {
-    lineage: "Rainbow Runtz descends from the legendary Runtz lineage (Zkittlez × Gelato), with Pigtail Gardens selecting a particularly vibrant phenotype known for its multicolored bud structure and candy-forward terpene profile. The Rainbow designation comes from the spectrum of hues expressed during late flower.",
-    misc: "One of Pigtail Gardens' most visually striking offerings. Buds display purple, green, and orange hues with a dense frost layer. The rainbow color expression is best achieved with a late-flower temperature drop. High demand in dispensaries for its shelf appeal alone.",
-    terpene_profile: "Limonene, Caryophyllene, Linalool, Myrcene",
-    aroma: "Candy shop sweetness with grape, citrus, and a subtle floral note. Reminiscent of a fruit punch mixed with fresh flowers. Very pungent — even a small amount fills a room.",
-    effects: "Euphoric and mood-elevating with a smooth, creamy body high. Balanced hybrid that leans slightly indica. Social, giggly, and creative at moderate doses; deeply relaxing at higher doses.",
-    therapeutic: "Useful for mood disorders, stress, mild pain, and insomnia (at higher doses). Linalool provides anxiolytic effects.",
-    negative: "Dry mouth is common. Can cause couch-lock at high doses. Some users report paranoia in large quantities.",
-    grow_notes: "Compact and bushy, ideal for SCROG or SOG setups. 8–9 week flower time. Benefits from a temperature drop to 60–65°F in the last 2 weeks to bring out full color expression. Medium-high yielder. Keep humidity below 50% in flower to prevent mold in dense colas.",
-    rosin_extraction: "Outstanding rosin producer. The heavy resin coating and candy terpenes make for a flavorful, terpy press. Use 73–90 micron bags at 180–190°F. Expect 20–26% return. The rosin retains the fruit-candy flavor remarkably well.",
-    mood_ratings: { Creative: 7, Energetic: 6, Focused: 5, Euphoric: 9, Relaxed: 8, Sleepy: 5, Hungry: 7, Social: 9 }
-  },
-  'jam-pack-2': {
-    lineage: "Jam Pack #2 is a Pigtail Gardens selection from a cross believed to involve fruity, jam-like genetics — possibly combining a Zkittlez or Sherbet derivative with a dense, resinous indica. Pheno #2 was hand-selected for its concentrated berry and stone fruit aroma.",
-    misc: "The name says it all — this strain is jam-packed with flavor and effect. Pigtail Gardens pheno #2 stands out in the lineup for its dense bud structure and unusually high resin content. A grower's dream and a hash maker's favorite.",
-    terpene_profile: "Myrcene, Caryophyllene, Terpinolene, Linalool",
-    aroma: "Rich mixed berry jam — blackberry, blueberry, and raspberry — with a creamy, pastry-like sweetness. Earthy undertone adds depth and complexity.",
-    effects: "Heavy, indica-dominant relaxation with a wave of euphoria on onset. Full body melt that builds gradually. Best reserved for evening or nighttime use.",
-    therapeutic: "Excellent for chronic pain, muscle spasms, insomnia, and anxiety. High myrcene content amplifies sedative effects.",
-    negative: "Significant couch-lock potential. Dry mouth and dry eyes are common. Not recommended before tasks requiring focus or energy.",
-    grow_notes: "Short and stocky indica structure, very resistant to physical stress. 8–9 week flower. Stack multiple tops via topping or mainlining. Very heavy feeder — cal-mag supplementation is beneficial. Watch for bud rot in humid environments due to cola density.",
-    rosin_extraction: "Top-tier rosin strain. Extreme resin glands and a rich terpene matrix make for a thick, jam-like rosin press. 73–90 micron bags at 185–195°F. Expect 22–28% return. Color ranges from gold to amber. Exceptional flavor retention.",
-    mood_ratings: { Creative: 4, Energetic: 3, Focused: 4, Euphoric: 7, Relaxed: 9, Sleepy: 8, Hungry: 8, Social: 5 }
-  },
-  'kryptochronic': {
-    lineage: "Kryptochronic is a Pigtail Gardens proprietary cross drawing on OG Kush and Chronic heritage — a nod to the classic 'Kronic' phenotypes of the early 2000s that were known for their extreme potency. The exact cross is held close by Pigtail Gardens but OG, Hash Plant, and Northern Lights influence is evident in the growth structure.",
-    misc: "A tribute to the legendary 'chronic' genetics of cannabis culture. Kryptochronic has a mysterious green aura and hits like the Kryptonite of weed — powerful, disorienting (in the best way), and unforgettable. Dense, lime-green nugs with a nuclear trichome count.",
-    terpene_profile: "Myrcene, Caryophyllene, Humulene, Pinene",
-    aroma: "Fuel, pine, and a sharp earthy skunk. Hints of lemon and hash underneath. The classic 'dank' smell that old-school connoisseurs will immediately recognize.",
-    effects: "Heavy cerebral onset with a strong body stone. Classic OG-style high — mentally hazy, physically immobilizing. Potent and long-lasting. Not for novice users.",
-    therapeutic: "Effective for severe pain, muscle tension, PTSD, and sleep disorders. High caryophyllene content may provide anti-inflammatory benefits.",
-    negative: "Intense couch-lock, dry mouth, dry eyes. Can cause dizziness or paranoia in high doses or for inexperienced users.",
-    grow_notes: "Classic indica-dominant structure, short and wide. 8–9 weeks flower. Requires strong support — colas get heavy. Resistant to pests. Thrive on heavy feeding schedules. May show slight yellowing in late flower — normal senescence, not a deficiency.",
-    rosin_extraction: "Very good rosin producer with a classic hash aroma. Press at 190–200°F with 90-micron bags. Yields 18–22%. The rosin has a classic earthy-fuel character reminiscent of old-school hash.",
-    mood_ratings: { Creative: 4, Energetic: 3, Focused: 3, Euphoric: 7, Relaxed: 9, Sleepy: 9, Hungry: 8, Social: 4 }
-  },
-  'cherry-jealousy': {
-    lineage: "Cherry Jealousy combines Cherry genetics (likely Cherry Pie or Cherry AK) with Jealousy (Sherbert Bx1 × Gelato 41), a strain that has rapidly become one of the most sought-after in the modern market. Pigtail Gardens' cut emphasizes the cherry and cream notes while adding depth from the Jealousy backbone.",
-    misc: "Jealousy genetics have taken the cannabis world by storm, and Cherry Jealousy is Pigtail Gardens' fruit-forward spin on it. Expect gas-meets-cherry in a package that smells like a cherry soda being poured through a fuel pump — in the best possible way.",
-    terpene_profile: "Caryophyllene, Limonene, Linalool, Myrcene",
-    aroma: "Cherry candy upfront with a sweet, creamy base and a fuel/gas undertone. Some phenotypes lean more toward cherry pie, others toward cherry cough drop. Rich and complex.",
-    effects: "Balanced hybrid effect — uplifting and creative at onset, transitioning to a warm, full-body relaxation. Sociable and mood-boosting without overwhelming sedation.",
-    therapeutic: "Good for depression, anxiety, stress, and mild pain. The balanced profile makes it versatile for day-to-evening use.",
-    negative: "Mild dry mouth and eyes. Some users report slight racing thoughts at higher doses due to the Gelato influence.",
-    grow_notes: "Medium height, vigorous growth. 9-week flower. Benefits from training — responds well to LST and topping. Expect above-average resin production. Color can shift to burgundy-red in late flower with temp drop. Good mold resistance.",
-    rosin_extraction: "Solid rosin strain. Cherry terpenes carry through the press well. Use 73–90 micron bags at 185–195°F. Expect 19–24% return. Rosin is often a light amber with an unmistakable cherry-gas scent.",
-    mood_ratings: { Creative: 8, Energetic: 7, Focused: 6, Euphoric: 9, Relaxed: 7, Sleepy: 4, Hungry: 6, Social: 8 }
-  },
-  'lipsmackerz': {
-    lineage: "Lipsmackerz is a Pigtail Gardens creation rooted in dessert-style genetics, likely involving Runtz, Zkittlez, or a candy-forward Cookies descendant. The name references the mouth-watering, saliva-inducing aroma and flavor that makes you involuntarily smack your lips.",
-    misc: "Few strains live up to their names as completely as Lipsmackerz. The terpene expression is so sweet and fruity it borders on artificial — but every bit of it is natural. A crowd-pleasing strain that consistently gets the 'what strain is THAT?' reaction.",
-    terpene_profile: "Limonene, Caryophyllene, Linalool, Ocimene",
-    aroma: "Tropical candy — mango, peach, and citrus wrapped in a sugary, candy-coated sweetness. Think exotic fruit gummies. Extremely fragrant with excellent room-filling presence.",
-    effects: "Bright, euphoric sativa-leaning onset with a mood-boosting, energetic quality. Settles into a gentle body relaxation. Excellent daytime or social strain.",
-    therapeutic: "Good for mood elevation, fatigue, mild anxiety, and social discomfort. The citrus-forward profile may provide focus-enhancing effects.",
-    negative: "Can cause dry mouth and mild anxiety at high doses. The energetic onset may not be suitable for severe anxiety.",
-    grow_notes: "Taller, sativa-leaning growth habit. Benefits from early topping and training. 9–10 week flower. Aromas are intense — odor control is essential. Moderate yielder but high bag appeal makes it worth the grow.",
-    rosin_extraction: "Good rosin candidate, especially for flavor-focused extractions. Use 90-micron bags at 180–190°F. Expect 17–22% return. The rosin is light golden and extremely aromatic — the candy terpenes survive the press beautifully.",
-    mood_ratings: { Creative: 8, Energetic: 8, Focused: 6, Euphoric: 9, Relaxed: 6, Sleepy: 3, Hungry: 7, Social: 9 }
-  },
-  'limecicle': {
-    lineage: "Limecicle draws from citrus-heavy genetics — likely a cross involving Lime Sherbert, Super Lemon Haze, or a Citrus Kush line. Pigtail Gardens bred for maximum lime expression, resulting in a strain that smells and tastes almost exactly like a frozen lime popsicle.",
-    misc: "Limecicle is Pigtail Gardens' most citrus-forward offering. It's refreshing, zesty, and immediately distinctive. A great summer strain and a palate cleanser for connoisseurs accustomed to heavier, gassier cultivars.",
-    terpene_profile: "Terpinolene, Limonene, Ocimene, Myrcene",
-    aroma: "Lime zest, lemon candy, and a cool, creamy vanilla backdrop — like a key lime pie meets a lime creamsicle. Tart and bright with an almost citrus cleaning product edge (in the best way).",
-    effects: "Uplifting, clear-headed, and energizing. Strongly sativa-leaning with a light body tingle. Promotes focus and motivation. The high is clean and functional without being overwhelming.",
-    therapeutic: "Excellent for daytime depression, fatigue, ADHD-style focus issues, and social anxiety. The terpinolene/limonene combo is known for clarity and mood lift.",
-    negative: "Can cause slight anxiety or racing thoughts in high doses. Dry mouth is common with citrus-terpene-heavy strains.",
-    grow_notes: "Sativa-leaning structure — taller with more internode spacing. Top early and train hard. 9–10 week flower. Citrus aroma intensifies dramatically in the last 3 weeks. Moderate yields but exceptional aroma and bag appeal.",
-    rosin_extraction: "Moderate rosin performer. The terpinolene-heavy profile can make yields slightly lower than resin-dense indicas, but the flavor payoff is extraordinary. Press at 175–185°F with a 90-micron bag. Expect 15–20% return. The rosin smells exactly like fresh lime.",
-    mood_ratings: { Creative: 7, Energetic: 9, Focused: 8, Euphoric: 8, Relaxed: 5, Sleepy: 2, Hungry: 5, Social: 7 }
-  },
-  'papayamosa': {
-    lineage: "Papayamosa is a Pigtail Gardens original, blending Papaya (Nirvana Seeds' classic tropical indica) with a Mimosa (Purple Punch × Clementine) derivative. The result is a tropical, citrus-meets-papaya experience with excellent balance between sativa brightness and indica body.",
-    misc: "The brunch strain. Papayamosa evokes a champagne glass full of tropical fruit — mimosa-like effervescence meets lush papaya sweetness. Consistently beautiful buds with orange and gold hues and a generous terpene coat.",
-    terpene_profile: "Myrcene, Caryophyllene, Limonene, Terpinolene",
-    aroma: "Sweet papaya and orange citrus with a light floral effervescence. There's a tropical juice quality that's both bright and creamy — mango orange papaya smoothie.",
-    effects: "Euphoric and uplifting at onset with a smooth, enjoyable body relaxation. A true daytime hybrid — functional and joyful without sedation. Excellent for creative work or social activities.",
-    therapeutic: "Good for stress, mild depression, fatigue, and social anxiety. The terpene mix supports mood elevation without overstimulation.",
-    negative: "Dry mouth, occasional dry eyes. Very few negatives — one of the more side-effect-friendly strains in this lineup.",
-    grow_notes: "Medium height, strong branching. Finishes in 9 weeks. Great for beginner growers — forgiving and resilient. Above-average yields with moderate feeding. Excellent mold and pest resistance. Will stretch slightly in first weeks of flower.",
-    rosin_extraction: "Very good rosin strain. Tropical terpenes hold up well under heat. Use 73–90 micron bags at 185–195°F. Expect 20–25% return. Rosin is golden with a fresh tropical scent that's immediately distinguishable.",
-    mood_ratings: { Creative: 8, Energetic: 7, Focused: 6, Euphoric: 9, Relaxed: 7, Sleepy: 3, Hungry: 6, Social: 9 }
-  },
-  'nana-glue': {
-    lineage: "Nana Glue combines Banana genetics (likely Banana OG or Banana Punch) with the legendary Gorilla Glue #4 (now called GG4 or Original Glue). The result is a potent, resin-dripping hybrid that brings together GG4's famous adhesive trichome production with a sweet banana cream terpene profile.",
-    misc: "GG4 is one of the most awarded strains in cannabis history, known for gluing users to the couch and growers to their plants. Nana Glue takes that foundation and adds a sweet, banana-forward twist that makes the experience more approachable while keeping the knockout power.",
-    terpene_profile: "Myrcene, Caryophyllene, Humulene, Limonene",
-    aroma: "Banana cream, diesel fuel, and earth. The banana is sweet and ripe — not artificial. Underneath is the classic GG4 earthiness and a touch of mocha or dark roast coffee.",
-    effects: "Potent and long-lasting full-body effect. Cerebral buzz gives way to deep physical relaxation and eventual sedation. Classic evening or night strain. Not for first-timers.",
-    therapeutic: "Highly effective for chronic pain, insomnia, anxiety, and muscle tension. One of the stronger therapeutic options in this collection.",
-    negative: "Strong couch-lock. Dry mouth and dry eyes. Can cause disorientation or paranoia in novice users or very high doses.",
-    grow_notes: "Moderate height with thick stems — GG4 structure throughout. 9–10 week flower. Resin production is exceptional — scissors and surfaces will be coated. Medium-high feeder. Watch for heavy bud weight requiring support. Mold-resistant.",
-    rosin_extraction: "Elite rosin strain. GG4 genetics are famous for exceptional extract yields. Press at 190–200°F with 73–90 micron bags. Expect 24–30% return. Rosin is thick, sappy, and amber — excellent sauce consistency if cold-cured.",
-    mood_ratings: { Creative: 4, Energetic: 3, Focused: 3, Euphoric: 7, Relaxed: 9, Sleepy: 9, Hungry: 9, Social: 5 }
-  },
-  'cream-smoothie': {
-    lineage: "Cream Smoothie is a Pigtail Gardens dessert-style cross believed to involve Cookies and Cream (Starfighter × Girl Scout Cookies) or a similar Cookies derivative crossed with a creamy, sweet indica. The profile is thick, rich, and indulgent.",
-    misc: "Exactly what the name promises. Cream Smoothie is a thick, creamy, dessert-style strain that envelops the senses in richness. The buds are typically dense and frosted with a milky trichome layer that reinforces the cream motif.",
-    terpene_profile: "Myrcene, Linalool, Caryophyllene, Bisabolol",
-    aroma: "Creamy vanilla, sweet cream, and a light nutty-cookie base. Like a vanilla milkshake with a hint of baked goods. Soft and enveloping rather than sharp or pungent.",
-    effects: "Smooth, gentle relaxation. Indica-dominant with a pleasant euphoric softness rather than a harsh body slam. Great for evening relaxation, creative daydreaming, or gentle social settings.",
-    therapeutic: "Good for anxiety, mild pain, stress, and sleep prep. The linalool and bisabolol combination makes this particularly soothing.",
-    negative: "Mild couch-lock at higher doses. Dry mouth. The sedative quality makes it unsuitable for daytime productivity.",
-    grow_notes: "Compact and manageable — good for smaller grow spaces. 8–9 week flower. Medium feeder. Responds well to topping and LST. Trichome coverage is excellent. Cure for at least 4–6 weeks post-harvest to fully develop the cream and vanilla notes.",
-    rosin_extraction: "Excellent rosin strain for flavor-focused pressing. The creamy terpenes survive the press beautifully. Use 73-micron bags at 180–190°F for a terp-rich, lighter press. Expect 19–24% return. Rosin is light gold with a silky, vanilla-cream aroma.",
-    mood_ratings: { Creative: 6, Energetic: 4, Focused: 5, Euphoric: 7, Relaxed: 9, Sleepy: 7, Hungry: 7, Social: 6 }
-  },
-  'grease-monkey': {
-    lineage: "Grease Monkey (Gorilla Glue #4 × Cookies and Cream) is a well-established cultivar from Exotic Genetix, brought into the Pigtail Gardens lineup for its legendary combination of resin production, potency, and diesel-cookie flavor. A classic modern hybrid that needs no introduction.",
-    misc: "Grease Monkey earned its reputation as one of the top indica-dominant hybrids of the 2010s and remains a staple for serious growers and extract artists. The combination of GG4 power with Cookies sweetness created something enduring. Pigtail Gardens carries a well-verified cut of this iconic strain.",
-    terpene_profile: "Myrcene, Caryophyllene, Limonene, Humulene",
-    aroma: "Diesel and fuel with sweet cookie dough and a vanilla-earthy finish. Pungent, complex, and immediately recognizable. The sweetness balances the fuel edge perfectly.",
-    effects: "Heavy indica-dominant relaxation with a sedating, long-lasting body stone. Cerebral cloudiness. Best suited for evening and nighttime. Can induce a powerful, thoughtful mental state before full sedation.",
-    therapeutic: "Very effective for pain, insomnia, PTSD, and appetite loss. One of the most reliable therapeutic strains in this collection.",
-    negative: "Strong couch-lock. Dry mouth, dry eyes. Can cause anxiety in sativa-sensitive users. Not for daytime use.",
-    grow_notes: "Vigorous grower, medium-tall. 8–9 week flower. Resin production is exceptional — GG genetics show strongly. Heavy feeder and heavy yielder. One of the highest-yielding strains in this collection when grown well. Strong main colas benefit from staking.",
-    rosin_extraction: "Exceptional rosin performer. Grease Monkey is a staple for commercial solventless extractors. Press at 190–200°F with 73–90 micron bags. Expect 22–28% return. Rosin is dark amber with a fuel-cookie aroma that's incredibly complex.",
-    mood_ratings: { Creative: 4, Energetic: 3, Focused: 3, Euphoric: 7, Relaxed: 9, Sleepy: 9, Hungry: 8, Social: 4 }
-  },
-  'blue-nerdz': {
-    lineage: "Blue Nerdz combines Blueberry genetics (DJ Short's classic) with a Nerdz (also called Nerds or Grape Nerdz) line — a candy-forward strain derived from Grape Ape and similar sweet-grape genetics. The combination doubles down on the sweet berry-grape candy profile.",
-    misc: "Blue Nerdz looks like it was designed to win cannabis cups — deep purple and blue hues, a candy-sweet aroma, and a bag appeal that photographs exceptionally well. Pigtail Gardens' version emphasizes the blueberry candy side, creating something that smells like blue raspberry candy.",
-    terpene_profile: "Myrcene, Linalool, Caryophyllene, Ocimene",
-    aroma: "Blue raspberry candy, blueberry muffin, and a grape-sweet finish. Reminiscent of Nerd Ropes or blueberry bubblegum. Sweet, artificial-seeming but completely natural.",
-    effects: "Relaxing indica-dominant high with a pleasant, mood-boosting onset. Sociable and comfortable. Transitions into a calm, restful state. Great for late afternoon or early evening.",
-    therapeutic: "Useful for anxiety, stress, mild depression, and sleep initiation. The linalool provides anxiolytic support.",
-    negative: "Possible dry mouth and drowsiness. Couch-lock at higher doses. Some users experience slight headache.",
-    grow_notes: "Medium height with good branching. 8–9 week flower. The blue and purple hues develop best with a temperature drop in late flower (below 65°F nights). Moderate feeder. Good mold resistance. Compact, dense buds with beautiful coloration.",
-    rosin_extraction: "Good rosin producer with outstanding flavor. Press at 180–190°F with 73–90 micron bags. Expect 18–23% return. Rosin takes on a purple-gold hue and retains the blueberry candy aroma well.",
-    mood_ratings: { Creative: 6, Energetic: 5, Focused: 5, Euphoric: 8, Relaxed: 8, Sleepy: 6, Hungry: 7, Social: 7 }
-  },
-  'jet-fuel-og': {
-    lineage: "Jet Fuel OG (also known as G6) is a cross of Aspen OG and High Country Diesel, created by 303 Seeds. It's been widely propagated and popularized for its extreme sour-fuel terpene profile and functional, energizing hybrid effects that defy its diesel fuel name.",
-    misc: "Despite the name, Jet Fuel OG doesn't knock you out — it launches you. One of the most energizing fuel-terpene strains available, Jet Fuel OG is beloved by sativa lovers who want gas without the indica heaviness. A classic in Colorado dispensaries.",
-    terpene_profile: "Terpinolene, Caryophyllene, Ocimene, Myrcene",
-    aroma: "Pure diesel and jet fuel with a subtle sour citrus edge. The aroma is bold, sharp, and petroleum-forward — exactly what the name suggests. One of the most authentically 'fuel' strains available.",
-    effects: "Stimulating, energetic, and uplifting. Clear-headed cerebral focus with minimal body weight. Excellent for daytime productivity, exercise, or creative work. The OG touch provides a subtle earthy grounding.",
-    therapeutic: "Good for fatigue, depression, ADHD, and daytime pain management without sedation. The terpinolene profile supports focus and energy.",
-    negative: "Can cause anxiety or paranoia in sensitive users due to the energizing, stimulating nature. Dry mouth is common.",
-    grow_notes: "Sativa-leaning structure, taller with longer internode spacing. Benefits from heavy training. 9–10 week flower. The diesel terpenes intensify dramatically in the final 2–3 weeks. Odor control is critical. Moderate yielder.",
-    rosin_extraction: "Moderate rosin performer — yields are not the highest, but the flavor is unmatched for fuel-lovers. Press at 180–190°F with 90-micron bags. Expect 16–21% return. Rosin is light amber with an intense fuel-sour aroma.",
-    mood_ratings: { Creative: 8, Energetic: 9, Focused: 9, Euphoric: 8, Relaxed: 5, Sleepy: 2, Hungry: 5, Social: 7 }
-  },
-  'blue-dream': {
-    lineage: "Blue Dream (Blueberry × Haze) is one of the most famous and widely grown strains in cannabis history, originating in California. DJ Short's Blueberry crossed with a Super Silver Haze phenotype created the quintessential balanced hybrid — gentle enough for beginners, satisfying enough for veterans.",
-    misc: "Blue Dream has been the best-selling strain in legal US markets for multiple consecutive years. Its popularity is not a coincidence — it offers consistent, reliable, approachable effects with a pleasant flavor profile. Pigtail Gardens carries a verified, well-grown cut of this legendary cultivar.",
-    terpene_profile: "Myrcene, Caryophyllene, Pinene, Terpinolene",
-    aroma: "Sweet blueberry, light floral haze, and a fresh piney backdrop. Clean, mild, and inviting. Not as pungent as many modern strains — approachable and pleasant.",
-    effects: "Balanced, gentle euphoria with a motivating mental clarity and a light, pleasant body sensation. The gold standard for approachable hybrid effects — functional, joyful, and smooth.",
-    therapeutic: "Excellent for beginners, anxiety, depression, mild pain, and nausea. The balanced profile makes it one of the most broadly therapeutic strains in this collection.",
-    negative: "Dry mouth, occasional dry eyes. Some users report slight headache. The haze genetics can cause mild anxiety in very sensitive users.",
-    grow_notes: "Classic sativa structure — tall with long internodes. Top aggressively early and train hard. 9–10 week flower. One of the highest-yielding strains in this collection — the haze genetics push productivity. Easy to grow and very forgiving.",
-    rosin_extraction: "Decent rosin performer. Not the highest yields, but reliable and consistent. Press at 185–195°F with 90-micron bags. Expect 16–21% return. Rosin is light gold with a subtle berry-haze aroma.",
-    mood_ratings: { Creative: 8, Energetic: 7, Focused: 7, Euphoric: 8, Relaxed: 7, Sleepy: 3, Hungry: 6, Social: 8 }
-  },
-  'pre-98-bubba-kush': {
-    lineage: "Pre-98 Bubba Kush is a legendary OG Kush phenotype that predates the widely distributed post-1998 Bubba Kush cuts. Believed to be a Hindu Kush × OG cross, it was circulated in California's early medical cannabis scene. The 'Pre-98' designation indicates this is from the original, pre-commercialization genetic line.",
-    misc: "Pre-98 Bubba Kush is considered by many old-school connoisseurs to be the definitive Bubba Kush — a strain with cultural and historical significance in cannabis. Known for its squat structure, extreme potency, and the most authentic 'Kush' aroma available. Not for beginners.",
-    terpene_profile: "Myrcene, Caryophyllene, Humulene, Pinene",
-    aroma: "Deep, dank Kush — hash, earth, pine, and spice with a subtle chocolate-coffee backdrop. The most authentically 'kushy' aroma in this collection. Old-school, classic, and unmistakable.",
-    effects: "Deeply sedating, full-body indica stone. Heavy, long-lasting, and powerful. Hits fast and builds over 30–45 minutes. Purely a nighttime strain. Can cause introspective mental states before deep relaxation.",
-    therapeutic: "Among the most therapeutic strains for severe pain, PTSD, insomnia, and muscle spasms. A staple for serious medical cannabis users.",
-    negative: "Heavy couch-lock, dry mouth, dry eyes, and next-morning grogginess. Disorientation at high doses. Not appropriate for daytime or beginners.",
-    grow_notes: "Classic Kush structure — very short and compact with wide fan leaves. 8–9 week flower. Extremely dense buds — watch for bud rot in high humidity. Very heavy feeder. Slow but reliable grower. The hash aroma develops fully only with a proper 60+ day cure.",
-    rosin_extraction: "World-class rosin strain. Kush genetics have always produced exceptional hash and rosin. Press at 185–200°F with 73–90 micron bags. Expect 22–28% return. Rosin is dark amber to brown — thick, hash-like, and extraordinary in flavor.",
-    mood_ratings: { Creative: 3, Energetic: 2, Focused: 3, Euphoric: 6, Relaxed: 9, Sleepy: 10, Hungry: 8, Social: 3 }
-  },
-  'skywalker-og': {
-    lineage: "Skywalker OG (Skywalker × OG Kush) is a cross created by Dutch Passion and Darkhorse Genetics. Skywalker itself (Blueberry × Mazar) brings sweetness and indica growth structure, while OG Kush adds the classic West Coast fuel and earthiness. The result is a heavy, classic OG-style indica with a touch of sweetness.",
-    misc: "The force is strong with this one. Skywalker OG is named for its powerful, out-of-this-world effect profile. A favorite among OG Kush fans who want extra power and a slight sweetness. Consistently appears on 'most potent' lists and is a go-to for those needing serious relief.",
-    terpene_profile: "Myrcene, Caryophyllene, Limonene, Linalool",
-    aroma: "Classic OG fuel and earthy spice with a sweet, blueberry-sweet backdrop from the Skywalker heritage. Complex, layered, and deeply satisfying for OG fans.",
-    effects: "Powerful, slow-building body stone with an initial cerebral clarity that fades into deep physical relaxation and sleep. One of the most reliably sedating strains in this collection.",
-    therapeutic: "Excellent for pain, insomnia, anxiety, PTSD, and muscle tension. The OG + indica combination provides comprehensive body relief.",
-    negative: "Heavy couch-lock. Dry mouth, dry eyes. Dizziness at high doses. Not appropriate for productivity or daytime use.",
-    grow_notes: "Medium-short indica structure with strong OG vigor. 9–10 week flower. Heavy feeder and heavy yielder. The OG genetics push resin production to impressive levels. Support colas in the last 2–3 weeks — they get very heavy. Cal-mag supplementation recommended.",
-    rosin_extraction: "Outstanding rosin strain. OG genetics reliably perform at the top of any strain lineup. Press at 190–200°F with 73–90 micron bags. Expect 22–27% return. Rosin has the classic OG fuel aroma with a hint of sweet berry.",
-    mood_ratings: { Creative: 4, Energetic: 3, Focused: 4, Euphoric: 7, Relaxed: 9, Sleepy: 9, Hungry: 8, Social: 4 }
-  },
-  'kush-mintz': {
-    lineage: "Kush Mintz (Bubba Kush × Animal Mints) is a creation by Seed Junky Genetics, one of the most influential modern breeders. Animal Mints (Animal Cookies × SinMint Cookies) brings a minty, fuel-cookie complexity, while Bubba Kush grounds it with deep indica sedation. The result is one of the most unique flavor profiles in modern cannabis.",
-    misc: "Kush Mintz has achieved near-legendary status in the modern cannabis market — a true collector's strain. The mint-kush flavor combination is unlike anything else, and the effects are powerful and nuanced. Seed Junky Genetics created something special with this cross, and it remains highly sought-after.",
-    terpene_profile: "Caryophyllene, Limonene, Linalool, Myrcene",
-    aroma: "Cool mint and vanilla cookie with a deep Kush earthiness underneath. There's a gas-fuel note that bridges the Bubba Kush heritage with the Animal Mints complexity. Like an Andes mint dipped in earth and fuel.",
-    effects: "Potent indica-dominant high with a distinctive minty mental clarity at onset before transitioning to deep body relaxation. More cerebral and nuanced than typical indicas at first, then deeply sedating.",
-    therapeutic: "Excellent for pain, insomnia, anxiety, and stress. The unique combination of caryophyllene and linalool provides both anti-inflammatory and anxiolytic support.",
-    negative: "Heavy couch-lock in the later phase. Dry mouth, dry eyes. The initial cerebral onset may cause slight anxiety in very sensitive users.",
-    grow_notes: "Medium height with good structure. 9–10 week flower. Demanding feeder — responds exceptionally well to proper nutrient management. Resin production is exceptional. The mint aroma develops fully in the last 3–4 weeks of flower. Cure for 60+ days for full flavor development.",
-    rosin_extraction: "Top-tier rosin strain. Kush Mintz is used by some of the best solventless extractors in the industry. Press at 185–200°F with 73–90 micron bags. Expect 21–27% return. Rosin is light amber to gold with the most distinctive mint-kush aroma of any rosin in this collection.",
-    mood_ratings: { Creative: 6, Energetic: 4, Focused: 5, Euphoric: 8, Relaxed: 9, Sleepy: 8, Hungry: 7, Social: 5 }
-  }
-};
+const DEFAULT_RESEARCH = {}; // Research loaded from data/research_cache.json
 
 async function init() {
+  // 1. Try Python API (local dev with FastAPI)
   try {
     const resp = await fetch('/api/strains');
     if (!resp.ok) throw new Error();
     const data = await resp.json();
     allStrains = data.strains || [];
-    // Clear stale localStorage research so server data always wins
-    localStorage.removeItem(LS_RESEARCH);
     researchCache = {};
   } catch {
-    const saved = loadStrains();
-    allStrains = saved || JSON.parse(JSON.stringify(DEFAULT_STRAINS));
-    if (!saved) saveStrains();
-    researchCache = loadResearch();
+    // 2. Try static JSON files (GitHub Pages or any web server)
+    try {
+      const [sRes, rRes] = await Promise.all([
+        fetch('./data/strains.json'),
+        fetch('./data/research_cache.json')
+      ]);
+      if (!sRes.ok) throw new Error();
+      allStrains = (await sRes.json()).strains || [];
+      researchCache = rRes.ok ? await rRes.json() : loadResearch();
+    } catch {
+      // 3. Last resort: localStorage or minimal hardcoded defaults
+      const saved = loadStrains();
+      allStrains = saved || JSON.parse(JSON.stringify(DEFAULT_STRAINS));
+      if (!saved) saveStrains();
+      researchCache = loadResearch();
+    }
   }
   updateKeyIndicator();
   renderGrid();
@@ -604,7 +410,9 @@ async function openDetail(id) {
   delete heroImg.dataset.triedPng;
   loadStrainImg(heroImg, id);
   showOverlay('detail-modal');
-  // Always try server first so PTG research data is never stale
+  // If research already loaded (from static files or previous fetch), use it immediately
+  if (researchCache[id]) { renderResearch(researchCache[id], strain); return; }
+  // Try Python API (local dev mode)
   try {
     const resp = await fetch(`/api/research/${id}`);
     if (resp.ok) {
@@ -616,8 +424,6 @@ async function openDetail(id) {
       }
     }
   } catch {}
-  // Fall back to anything cached locally
-  if (researchCache[id]) { renderResearch(researchCache[id], strain); return; }
   showGeneratePanel(strain);
 }
 
