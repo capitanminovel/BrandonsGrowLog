@@ -517,12 +517,15 @@ async function init() {
     if (!resp.ok) throw new Error();
     const data = await resp.json();
     allStrains = data.strains || [];
+    // Clear stale localStorage research so server data always wins
+    localStorage.removeItem(LS_RESEARCH);
+    researchCache = {};
   } catch {
     const saved = loadStrains();
     allStrains = saved || JSON.parse(JSON.stringify(DEFAULT_STRAINS));
     if (!saved) saveStrains();
+    researchCache = loadResearch();
   }
-  researchCache = loadResearch();
   updateKeyIndicator();
   renderGrid();
 }
@@ -601,19 +604,20 @@ async function openDetail(id) {
   delete heroImg.dataset.triedPng;
   loadStrainImg(heroImg, id);
   showOverlay('detail-modal');
-  if (researchCache[id]) { renderResearch(researchCache[id], strain); return; }
+  // Always try server first so PTG research data is never stale
   try {
     const resp = await fetch(`/api/research/${id}`);
     if (resp.ok) {
       const data = await resp.json();
       if (data && Object.keys(data).length > 0) {
         researchCache[id] = data;
-        saveResearch();
         renderResearch(data, strain);
         return;
       }
     }
   } catch {}
+  // Fall back to anything cached locally
+  if (researchCache[id]) { renderResearch(researchCache[id], strain); return; }
   showGeneratePanel(strain);
 }
 
