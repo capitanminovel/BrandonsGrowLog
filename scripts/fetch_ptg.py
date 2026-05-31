@@ -1,32 +1,35 @@
 #!/usr/bin/env python3
 """
-Fetch strain research directly from pigtailgardens.com and update research_cache.json.
+Fetch strain pages from pigtailgardens.com and save the text to scripts/ptg_pages/.
 
 Must be run from your LOCAL machine — pigtailgardens.com blocks cloud server IPs.
+No API key needed. After running, the saved text files can be processed by Claude
+(in Claude Code or Claude chat) to update data/research_cache.json.
 
 Setup (one time):
-    pip install requests beautifulsoup4 anthropic playwright
+    pip install requests beautifulsoup4 playwright
     playwright install chromium
 
 Usage:
     python scripts/fetch_ptg.py                  # fetch all known PTG strains
     python scripts/fetch_ptg.py --discover       # list all current PTG product URLs
     python scripts/fetch_ptg.py <ptg_url>        # fetch one specific PTG product page
+
+After running:
+    Open a Claude Code session in this repo and say:
+    "Process the PTG page text files in scripts/ptg_pages/ and update data/research_cache.json"
 """
 
-import json
 import sys
 import time
-from datetime import datetime
 from pathlib import Path
 
 import requests
 from bs4 import BeautifulSoup
-from anthropic import Anthropic
 
-BASE = Path(__file__).parent.parent
+BASE       = Path(__file__).parent.parent
 STRAINS_FILE = BASE / "data" / "strains.json"
-RESEARCH_FILE = BASE / "data" / "research_cache.json"
+OUT_DIR    = Path(__file__).parent / "ptg_pages"
 
 BROWSER_HEADERS = {
     "User-Agent": (
@@ -44,7 +47,7 @@ BROWSER_HEADERS = {
 }
 
 # Known PTG product page URLs mapped to strain IDs in strains.json
-# Add new entries here as you acquire more cuts from PTG
+# Add new entries here when you acquire more cuts from PTG
 PTG_URLS = {
     "pineapples-in-space-4": "https://www.pigtailgardens.com/product-page/pineapples-in-space-4-pineapple-tart-x-space-runtz",
     "rainbow-runtz":          "https://www.pigtailgardens.com/product-page/rainbow-runtz-laughing-gas-x-runtz-crew",
@@ -65,7 +68,6 @@ PTG_URLS = {
 # ---------------------------------------------------------------------------
 
 def fetch_with_requests(url: str) -> str | None:
-    """Simple requests fetch — works if PTG doesn't block your IP."""
     try:
         resp = requests.get(url, headers=BROWSER_HEADERS, timeout=15)
         if resp.status_code != 200:
@@ -75,9 +77,8 @@ def fetch_with_requests(url: str) -> str | None:
         for tag in soup(["script", "style", "nav", "header", "footer"]):
             tag.decompose()
         text = soup.get_text(separator="\n", strip=True)
-        # Wix pages often return a JS shell with no real content when blocked
         if len(text) < 400 or "product" not in text.lower():
-            print(f"    requests → got {len(text)} chars but no product content (likely JS-only shell)")
+            print(f"    requests → only {len(text)} chars, no product content (JS shell)")
             return None
         return text
     except Exception as e:
@@ -86,7 +87,6 @@ def fetch_with_requests(url: str) -> str | None:
 
 
 def fetch_with_playwright(url: str) -> str | None:
-    """Headless Chromium fetch via Playwright — handles JS-rendered pages."""
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
@@ -97,7 +97,6 @@ def fetch_with_playwright(url: str) -> str | None:
             browser = p.chromium.launch(headless=True)
             page = browser.new_page()
             page.goto(url, wait_until="networkidle", timeout=20000)
-            # Wait for the product description to appear
             try:
                 page.wait_for_selector("[data-testid='richTextElement'], .wixui-rich-text, p", timeout=8000)
             except Exception:
@@ -114,7 +113,6 @@ def fetch_with_playwright(url: str) -> str | None:
 
 
 def fetch_page(url: str) -> str | None:
-    """Try requests first, fall back to Playwright."""
     print(f"    Trying requests...")
     text = fetch_with_requests(url)
     if text:
@@ -128,65 +126,17 @@ def fetch_page(url: str) -> str | None:
 
 
 # ---------------------------------------------------------------------------
-# Research extraction
-# ---------------------------------------------------------------------------
-
-EXTRACTION_PROMPT = """You are extracting cannabis strain research data from a Pig Tail Gardens product page.
-
-Strain ID: {strain_id}
-Strain Name: {strain_name}
-
-Page content:
-{page_text}
-
-Extract all available information and return ONLY valid JSON with these exact six keys:
-
-{{
-  "genetics_lineage": "3-4 sentences: parent strains, full genetic lineage, breeder background, provenance from PTG, what makes this cultivar sought after. Use exact wording from the page where possible.",
-  "terpene_profile": "3-4 sentences: dominant and secondary terpenes, their aromas and synergies, how expression develops through cure.",
-  "effects": "3-4 sentences: onset character, cerebral vs body balance, intensity, duration, best use cases.",
-  "flavor_aroma": "3-4 sentences: inhale/exhale flavor, aroma at late flower, harvest, fresh cure, and long cure.",
-  "grow_notes": "3-4 sentences: structure and stretch, flowering time, training recommendations, environmental preferences.",
-  "rosin_extraction": "3-4 sentences: IWHE yield %, press temps in °F, wash water temp, what the finished rosin looks and smells like."
-}}
-
-Prioritize details directly from the PTG page. Fill any gaps with accurate knowledge about the genetics listed.
-Context: this is for a craft grower and solventless hash maker — be technically precise.
-Return only the JSON object, nothing else."""
-
-
-def extract_research(strain_id: str, strain_name: str, page_text: str, client: Anthropic) -> dict:
-    prompt = EXTRACTION_PROMPT.format(
-        strain_id=strain_id,
-        strain_name=strain_name,
-        page_text=page_text[:6000],
-    )
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=2000,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    content = response.content[0].text.strip()
-    if content.startswith("```"):
-        content = "\n".join(content.split("\n")[1:-1]).strip()
-    result = json.loads(content)
-    result["generated_at"] = datetime.now().isoformat()
-    return result
-
-
-# ---------------------------------------------------------------------------
 # Discovery
 # ---------------------------------------------------------------------------
 
-def discover_ptg_urls() -> dict[str, str]:
-    """Fetch pigtailgardens.com/list and extract all product page URLs."""
+def discover_ptg_urls() -> None:
+    import json
     list_url = "https://www.pigtailgardens.com/list"
     print(f"Fetching {list_url} ...")
-    text = fetch_page(list_url)
-    if not text:
-        print("Could not fetch list page — try running with Playwright installed.")
-        return {}
     resp = requests.get(list_url, headers=BROWSER_HEADERS, timeout=15)
+    if resp.status_code != 200:
+        print(f"HTTP {resp.status_code} — try installing Playwright for JS rendering")
+        return
     soup = BeautifulSoup(resp.text, "html.parser")
     urls = {}
     for a in soup.find_all("a", href=True):
@@ -195,7 +145,14 @@ def discover_ptg_urls() -> dict[str, str]:
             full = href if href.startswith("http") else f"https://www.pigtailgardens.com{href}"
             slug = href.split("/product-page/")[-1].rstrip("/")
             urls[slug] = full
-    return urls
+
+    with open(STRAINS_FILE) as f:
+        vault_ids = {s["id"] for s in json.load(f)["strains"]}
+
+    print(f"\nFound {len(urls)} product pages:\n")
+    for slug, url in sorted(urls.items()):
+        tag = "  ← in vault" if any(v in slug or slug in v for v in vault_ids) else ""
+        print(f"  {url}{tag}")
 
 
 # ---------------------------------------------------------------------------
@@ -203,74 +160,51 @@ def discover_ptg_urls() -> dict[str, str]:
 # ---------------------------------------------------------------------------
 
 def main():
-    client = Anthropic()
+    OUT_DIR.mkdir(exist_ok=True)
 
-    with open(STRAINS_FILE) as f:
-        strains_data = json.load(f)
-    with open(RESEARCH_FILE) as f:
-        research = json.load(f)
-
-    strains_by_id = {s["id"]: s for s in strains_data["strains"]}
-
-    # --discover mode
     if len(sys.argv) > 1 and sys.argv[1] == "--discover":
-        print("Discovering all current PTG product URLs...\n")
-        found = discover_ptg_urls()
-        if found:
-            print(f"Found {len(found)} product pages:\n")
-            for slug, url in sorted(found.items()):
-                match = "  (in vault)" if any(s_id in slug or slug in s_id for s_id in strains_by_id) else ""
-                print(f"  {url}{match}")
+        discover_ptg_urls()
         return
 
-    # Single URL mode
     if len(sys.argv) > 1 and sys.argv[1].startswith("http"):
         url = sys.argv[1]
         slug = url.split("/product-page/")[-1].rstrip("/")
-        strain_id = next((s for s in strains_by_id if s in slug or slug in s), None)
-        if not strain_id:
-            strain_id = input(f"Enter the strain ID (from strains.json) for this URL: ").strip()
-        urls_to_fetch = {strain_id: url}
+        urls_to_fetch = {slug: url}
     else:
-        # Default: all known PTG strains
         urls_to_fetch = PTG_URLS
 
-    updated, failed = [], []
+    saved, failed = [], []
 
     for strain_id, url in urls_to_fetch.items():
-        strain = strains_by_id.get(strain_id)
-        name = strain["name"] if strain else strain_id
         print(f"\n{'─'*60}")
-        print(f"  {name}  [{strain_id}]")
+        print(f"  [{strain_id}]")
         print(f"  {url}")
 
-        page_text = fetch_page(url)
-        if not page_text:
-            print(f"  FAILED — skipping. Check the URL is correct.")
+        text = fetch_page(url)
+        if not text:
+            print(f"  FAILED — check the URL or install Playwright")
             failed.append(strain_id)
             continue
 
-        print(f"  Extracting research with Claude...")
-        try:
-            result = extract_research(strain_id, name, page_text, client)
-            research[strain_id] = result
-            updated.append(strain_id)
-            print(f"  Done.")
-        except Exception as e:
-            print(f"  Extraction failed: {e}")
-            failed.append(strain_id)
-
+        out_file = OUT_DIR / f"{strain_id}.txt"
+        out_file.write_text(text, encoding="utf-8")
+        saved.append(strain_id)
+        print(f"  Saved → {out_file.relative_to(BASE)}")
         time.sleep(1)
 
-    with open(RESEARCH_FILE, "w") as f:
-        json.dump(research, f, indent=2)
-
     print(f"\n{'='*60}")
-    print(f"  Updated : {', '.join(updated) or 'none'}")
-    print(f"  Failed  : {', '.join(failed) or 'none'}")
-    print(f"  Saved → {RESEARCH_FILE}")
-    if updated:
-        print(f"\n  Next: git add data/research_cache.json && git commit -m 'Update research from PTG' && git push")
+    print(f"  Saved  : {len(saved)} files in scripts/ptg_pages/")
+    print(f"  Failed : {', '.join(failed) or 'none'}")
+
+    if saved:
+        print(f"""
+Next step — open a Claude Code session in this repo and say:
+
+  "Read the text files in scripts/ptg_pages/, extract structured research
+   for each strain, and update data/research_cache.json. Use the six-field
+   format: genetics_lineage, terpene_profile, effects, flavor_aroma,
+   grow_notes, rosin_extraction. Focus on solventless hash and craft growing."
+""")
 
 
 if __name__ == "__main__":
