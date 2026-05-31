@@ -72,7 +72,7 @@ PTG_URLS = {
 
 # Non-PTG strains — fetched from each breeder's own site or Leafly
 OTHER_URLS = {
-    "kryptochronic":  "https://alienlabs.org/products/kryptochronic",
+    "kryptochronic":  "https://www.compoundgenetics.com/strains/kryptochronic",
     "grease-monkey":  "https://exoticgenetix.com/product-category/seeds/grease-monkey/",
     "jet-fuel-og":    "https://www.leafly.com/strains/jet-fuel-og",
 }

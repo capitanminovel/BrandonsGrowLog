@@ -27,7 +27,7 @@
     {
       "id": "kryptochronic",
       "name": "Kryptochronic",
-      "breeder": "Compound Genetics (brand: Alien Labs)",
+      "breeder": "Compound Genetics",
       "status": "Vault",
       "notes": "(Fruity Pebbles OG x Alien Cookies) x Jet Fuel Gelato. Bred by Compound Genetics, cultivated and distributed by Alien Labs.",
       "added": "2026-05-31"
@@ -99,9 +99,9 @@
     {
       "id": "jet-fuel-og",
       "name": "Jet Fuel OG",
-      "breeder": "303 Seeds",
+      "breeder": "303 Seeds (B-Real / Cypress Hill cut)",
       "status": "Vault",
-      "notes": "Aspen OG x High Country Diesel (SFV OG x Sour Cream lineage meets NYC Diesel). Sativa-dominant (70/30), high-octane diesel fuel terps.",
+      "notes": "Aspen OG x High Country Diesel. Bred by 303 Seeds. B-Real (Cypress Hill / Dr. Greenthumb) has championed this cut and branded it under his name — a strain he's worked with since the early era. Sativa-dominant, high-octane diesel fuel terps.",
       "added": "2026-05-31"
     },
     {
