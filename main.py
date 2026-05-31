@@ -124,6 +124,8 @@ def generate_research(strain_id: str):
 
 Generate a detailed research profile for the cannabis strain "{strain['name']}" by {strain['breeder']}.
 
+Context: This collection is curated by a craft grower and solventless hash maker. Many strains were sourced as verified, pheno-hunted cuts or seeds from Pig Tail Gardens (pigtailgardens.com) — a small-batch breeder and cultivator in Hollywood, CA, known for rigorous pheno hunting, running 100+ active clone mothers, and verifying genetics before distribution. Where this strain is known to originate from or was selected by Pig Tail Gardens, acknowledge that provenance and their selection criteria in your response.
+
 Return ONLY valid JSON with exactly these six keys:
 
 {{
