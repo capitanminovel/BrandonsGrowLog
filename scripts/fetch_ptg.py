@@ -65,10 +65,9 @@ PTG_URLS = {
     "blue-dream":             "https://www.pigtailgardens.com/product-page/blue-dream-heirloom-cut-from-santa-cruz",
     "skywalker-og":           "https://www.pigtailgardens.com/product-page/skywalker-og-heirloom-cut-from-hollywood",
     "kush-mintz":             "https://www.pigtailgardens.com/product-page/kush-mints-rabid-hippie-cut",
-    # Verify exact slugs below via: python scripts/fetch_ptg.py --discover
-    "nana-glue":              "https://www.pigtailgardens.com/product-page/nana-glue-monroes-bedhead-cut",
-    "lipsmackerz":            "https://www.pigtailgardens.com/product-page/lipsmackerz-cltvtf-x-good-genes",
-    "pre-98-bubba-kush":      "https://www.pigtailgardens.com/product-page/pre-98-bubba-kush-heirloom-cut",
+    "nana-glue":              "https://www.pigtailgardens.com/product-page/nana-glue-monroe-s-bedhead-cut",
+    "lipsmackerz":            "https://www.pigtailgardens.com/product-page/lip-smackerz-cltvtd-x-good-greens",
+    "pre-98-bubba-kush":      "https://www.pigtailgardens.com/product-page/bubba-kush-pre-98-99",
 }
 
 # Non-PTG strains — fetched from each breeder's own site or Leafly
@@ -87,18 +86,18 @@ def fetch_with_requests(url: str) -> str | None:
     try:
         resp = requests.get(url, headers=BROWSER_HEADERS, timeout=15)
         if resp.status_code != 200:
-            print(f"    requests → HTTP {resp.status_code}")
+            print(f"    requests -> HTTP {resp.status_code}")
             return None
         soup = BeautifulSoup(resp.text, "html.parser")
         for tag in soup(["script", "style", "nav", "header", "footer"]):
             tag.decompose()
         text = soup.get_text(separator="\n", strip=True)
-        if len(text) < 400 or "product" not in text.lower():
-            print(f"    requests → only {len(text)} chars, no product content (JS shell)")
+        if len(text) < 400:
+            print(f"    requests -> only {len(text)} chars (JS shell)")
             return None
         return text
     except Exception as e:
-        print(f"    requests → error: {e}")
+        print(f"    requests -> error: {e}")
         return None
 
 
@@ -112,19 +111,19 @@ def fetch_with_playwright(url: str) -> str | None:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             page = browser.new_page()
-            page.goto(url, wait_until="networkidle", timeout=20000)
+            page.goto(url, wait_until="load", timeout=45000)
             try:
-                page.wait_for_selector("[data-testid='richTextElement'], .wixui-rich-text, p", timeout=8000)
+                page.wait_for_selector("[data-testid='richTextElement'], .wixui-rich-text, p", timeout=12000)
             except Exception:
                 pass
             content = page.inner_text("body")
             browser.close()
             if len(content) < 400:
-                print(f"    playwright → only {len(content)} chars")
+                print(f"    playwright -> only {len(content)} chars")
                 return None
             return content
     except Exception as e:
-        print(f"    playwright → error: {e}")
+        print(f"    playwright -> error: {e}")
         return None
 
 
@@ -148,12 +147,29 @@ def fetch_page(url: str) -> str | None:
 def discover_ptg_urls() -> None:
     import json
     list_url = "https://www.pigtailgardens.com/list"
-    print(f"Fetching {list_url} ...")
-    resp = requests.get(list_url, headers=BROWSER_HEADERS, timeout=15)
-    if resp.status_code != 200:
-        print(f"HTTP {resp.status_code} — try installing Playwright for JS rendering")
+    print(f"Fetching {list_url} with Playwright (JS rendering)...")
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        print("Playwright not installed. Run: pip install playwright && playwright install chromium")
         return
-    soup = BeautifulSoup(resp.text, "html.parser")
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page()
+            page.goto(list_url, wait_until="networkidle", timeout=30000)
+            # wait for product links to appear
+            try:
+                page.wait_for_selector("a[href*='/product-page/']", timeout=10000)
+            except Exception:
+                pass
+            html = page.content()
+            browser.close()
+    except Exception as e:
+        print(f"Playwright error: {e}")
+        return
+
+    soup = BeautifulSoup(html, "html.parser")
     urls = {}
     for a in soup.find_all("a", href=True):
         href = a["href"]
@@ -198,7 +214,7 @@ def main():
     saved, failed = [], []
 
     for strain_id, url in urls_to_fetch.items():
-        print(f"\n{'─'*60}")
+        print(f"\n{'-'*60}")
         print(f"  [{strain_id}]  ({label})")
         print(f"  {url}")
 
@@ -211,10 +227,10 @@ def main():
         out_file = OUT_DIR / f"{strain_id}.txt"
         out_file.write_text(text, encoding="utf-8")
         saved.append(strain_id)
-        print(f"  Saved → {out_file.relative_to(BASE)}")
+        print(f"  Saved -> {out_file.relative_to(BASE)}")
         time.sleep(1)
 
-    print(f"\n{'='*60}")
+    print("\n" + "="*60)
     print(f"  Saved  : {len(saved)} files in scripts/ptg_pages/")
     print(f"  Failed : {', '.join(failed) or 'none'}")
 
