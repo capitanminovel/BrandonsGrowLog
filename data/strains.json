@@ -27,9 +27,9 @@
     {
       "id": "kryptochronic",
       "name": "Kryptochronic",
-      "breeder": "Alien Labs / Compound Genetics",
+      "breeder": "Compound Genetics (brand: Alien Labs)",
       "status": "Vault",
-      "notes": "Fruity Pebbles OG x Alien Cookies x Jet Fuel Gelato. Exotic gassy-fruity hybrid from Alien Labs.",
+      "notes": "(Fruity Pebbles OG x Alien Cookies) x Jet Fuel Gelato. Bred by Compound Genetics, cultivated and distributed by Alien Labs.",
       "added": "2026-05-31"
     },
     {
@@ -43,9 +43,9 @@
     {
       "id": "lipsmackerz",
       "name": "Lipsmackerz",
-      "breeder": "Maven Genetics",
+      "breeder": "Good Greens (Maven Genetics)",
       "status": "Vault",
-      "notes": "LCG x Z Animal Cookies x Good Greens Candy #4. Indica-dominant candy strain with heavy fruit and cream notes.",
+      "notes": "LCG x Z Animal Cookies x Good Greens Candy #4. Bred by Good Greens, produced by Maven Genetics. Indica-dominant candy strain.",
       "added": "2026-05-31"
     },
     {
@@ -83,7 +83,7 @@
     {
       "id": "grease-monkey",
       "name": "Grease Monkey",
-      "breeder": "Symbiotic Genetics",
+      "breeder": "Exotic Genetix",
       "status": "Vault",
       "notes": "Cookies & Cream x Gorilla Glue #4. Dense resinous indica-dominant with diesel-cookie profile.",
       "added": "2026-05-31"
@@ -93,7 +93,7 @@
       "name": "Blue Nerdz",
       "breeder": "Sherb Money / Runtz Crew",
       "status": "Vault",
-      "notes": "Candy-forward blue/purple phenotype from the Runtz Crew. Verified cut from Pig Tail Gardens.",
+      "notes": "Blue Sherb [Blue Cookies x Sunset Sherb] x Zkittlez. Verified cut from Pig Tail Gardens.",
       "added": "2026-05-31"
     },
     {
@@ -109,7 +109,7 @@
       "name": "Blue Dream",
       "breeder": "Heirloom (Santa Cruz)",
       "status": "Vault",
-      "notes": "Blueberry x Haze. Classic heirloom Santa Cruz cut. Verified cut from Pig Tail Gardens.",
+      "notes": "DJ Short's Blueberry x Santa Cruz Haze. Classic SoCal heirloom, made famous around 2003. Verified cut from Pig Tail Gardens.",
       "added": "2026-05-31"
     },
     {
@@ -125,7 +125,7 @@
       "name": "Skywalker OG",
       "breeder": "Heirloom (Hollywood cut)",
       "status": "Vault",
-      "notes": "Emerald Triangle x Nevill's Hindu Kush. Heirloom Hollywood cut. Verified cut from Pig Tail Gardens.",
+      "notes": "TRUE OG Kush clone (Emerald Triangle x Nevil's Hindu Kush). Renamed 'Skywalker OG' at the Sunset Collective in West Hollywood. PTG received it from a mentor who held it 15+ years. Verified cut from Pig Tail Gardens.",
       "added": "2026-05-31"
     },
     {
