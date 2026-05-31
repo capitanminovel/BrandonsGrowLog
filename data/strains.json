@@ -1,68 +1,140 @@
 {
   "strains": [
     {
-      "id": "ocifer",
-      "name": "Ocifer",
-      "breeder": "Brothers Grimm",
+      "id": "pineapples-in-space-4",
+      "name": "Pineapples in Space #4",
+      "breeder": "Tiki Mad Man (Smashby's Trees cut)",
       "status": "Vault",
-      "notes": "",
-      "added": "2026-05-27"
+      "notes": "Pineapple Tart x Space Runtz. #4 pheno selected by Smashby's Trees in Trinidad, CO. Dense candied pineapple trichomes, easy to root. Verified cut from Pig Tail Gardens.",
+      "added": "2026-05-31"
     },
     {
-      "id": "pasture-bedtime",
-      "name": "Pasture Bedtime",
-      "breeder": "Solfire Gardens",
+      "id": "rainbow-runtz",
+      "name": "Rainbow Runtz",
+      "breeder": "Runtz Crew / Laughing Gas",
       "status": "Vault",
-      "notes": "",
-      "added": "2026-05-27"
+      "notes": "Laughing Gas x Runtz Crew. Cup-winning candy variety. Dense purple buds. Verified cut from Pig Tail Gardens.",
+      "added": "2026-05-31"
     },
     {
-      "id": "mind-flayer-s1",
-      "name": "Mind Flayer S1",
-      "breeder": "Solfire Gardens",
+      "id": "jam-pack-2",
+      "name": "Jam Pack #2",
+      "breeder": "Pig Tail Gardens",
       "status": "Vault",
-      "notes": "",
-      "added": "2026-05-27"
+      "notes": "PTG original breed. ~7% to rosin — hasher's dream selection from their pheno hunt.",
+      "added": "2026-05-31"
     },
     {
-      "id": "strawn-johnson",
-      "name": "Strawn Johnson",
-      "breeder": "Solfire Gardens",
+      "id": "kryptochronic",
+      "name": "Kryptochronic",
+      "breeder": "Alien Labs / Compound Genetics",
       "status": "Vault",
-      "notes": "",
-      "added": "2026-05-27"
+      "notes": "Fruity Pebbles OG x Alien Cookies x Jet Fuel Gelato. Exotic gassy-fruity hybrid from Alien Labs.",
+      "added": "2026-05-31"
     },
     {
-      "id": "mandarin-cookies-v3",
-      "name": "Mandarin Cookies V3",
-      "breeder": "Ethos Genetics",
+      "id": "cherry-jealousy",
+      "name": "Cherry Jealousy",
+      "breeder": "Pig Tail Gardens",
       "status": "Vault",
-      "notes": "",
-      "added": "2026-05-27"
+      "notes": "PTG original breed. Cherry cross on Jealousy (Sherbet Bx1 x Gelato 41 by Seed Junky). Deep cherry-gas profile.",
+      "added": "2026-05-31"
     },
     {
-      "id": "cotton-candy-cookies",
-      "name": "Cotton Candy Cookies",
-      "breeder": "Ethos Genetics",
+      "id": "lipsmackerz",
+      "name": "Lipsmackerz",
+      "breeder": "Maven Genetics",
       "status": "Vault",
-      "notes": "Cross: Grape x Mandarin Cookies",
-      "added": "2026-05-27"
+      "notes": "LCG x Z Animal Cookies x Good Greens Candy #4. Indica-dominant candy strain with heavy fruit and cream notes.",
+      "added": "2026-05-31"
     },
     {
-      "id": "spicy-guava",
-      "name": "Spicy Guava",
-      "breeder": "Elev8 Seeds",
+      "id": "limecicle",
+      "name": "Limecicle",
+      "breeder": "Duke of Erb",
       "status": "Vault",
-      "notes": "",
-      "added": "2026-05-27"
+      "notes": "Zkittlez x Strawberry Zkillato. Zesty lime-citrus terpene profile. Verified cut from Pig Tail Gardens.",
+      "added": "2026-05-31"
     },
     {
-      "id": "blueberry-pie",
-      "name": "Blueberry Pie",
-      "breeder": "Elev8 Seeds",
+      "id": "papayamosa",
+      "name": "Papayamosa",
+      "breeder": "Duke of Erb",
       "status": "Vault",
-      "notes": "",
-      "added": "2026-05-27"
+      "notes": "LCG x Blueberry Mimosa. 6%+ to rosin. Tropical citrus-papaya terpene profile. Verified cut from Pig Tail Gardens.",
+      "added": "2026-05-31"
+    },
+    {
+      "id": "nana-glue",
+      "name": "Nana Glue",
+      "breeder": "Square One Genetics",
+      "status": "Vault",
+      "notes": "Gorilla Glue #4 x Banana Butter Cups. Indica-dominant (~70/30). Heavy resin, banana-diesel terpenes.",
+      "added": "2026-05-31"
+    },
+    {
+      "id": "cream-smoothie",
+      "name": "Cream Smoothie",
+      "breeder": "Fiya Farmer",
+      "status": "Vault",
+      "notes": "Gelonade x C.R.E.A.M. Dessert hybrid with citrus-cream terpene axis. ~8-9 week finish. Verified cut from Pig Tail Gardens.",
+      "added": "2026-05-31"
+    },
+    {
+      "id": "grease-monkey",
+      "name": "Grease Monkey",
+      "breeder": "Symbiotic Genetics",
+      "status": "Vault",
+      "notes": "Cookies & Cream x Gorilla Glue #4. Dense resinous indica-dominant with diesel-cookie profile.",
+      "added": "2026-05-31"
+    },
+    {
+      "id": "blue-nerdz",
+      "name": "Blue Nerdz",
+      "breeder": "Sherb Money / Runtz Crew",
+      "status": "Vault",
+      "notes": "Candy-forward blue/purple phenotype from the Runtz Crew. Verified cut from Pig Tail Gardens.",
+      "added": "2026-05-31"
+    },
+    {
+      "id": "jet-fuel-og",
+      "name": "Jet Fuel OG",
+      "breeder": "303 Seeds",
+      "status": "Vault",
+      "notes": "Aspen OG x High Country Diesel (SFV OG x Sour Cream lineage meets NYC Diesel). Sativa-dominant (70/30), high-octane diesel fuel terps.",
+      "added": "2026-05-31"
+    },
+    {
+      "id": "blue-dream",
+      "name": "Blue Dream",
+      "breeder": "Heirloom (Santa Cruz)",
+      "status": "Vault",
+      "notes": "Blueberry x Haze. Classic heirloom Santa Cruz cut. Verified cut from Pig Tail Gardens.",
+      "added": "2026-05-31"
+    },
+    {
+      "id": "pre-98-bubba-kush",
+      "name": "Pre 98 Bubba Kush",
+      "breeder": "Heirloom (pre-1998 phenotype)",
+      "status": "Vault",
+      "notes": "Classic SoCal indica heirloom, pre-1998 phenotype. Exact lineage unknown. Hash plant structure, heavy sedating indica.",
+      "added": "2026-05-31"
+    },
+    {
+      "id": "skywalker-og",
+      "name": "Skywalker OG",
+      "breeder": "Heirloom (Hollywood cut)",
+      "status": "Vault",
+      "notes": "Emerald Triangle x Nevill's Hindu Kush. Heirloom Hollywood cut. Verified cut from Pig Tail Gardens.",
+      "added": "2026-05-31"
+    },
+    {
+      "id": "kush-mintz",
+      "name": "Kush Mintz",
+      "breeder": "Seed Junky Genetics (Rabid Hippie cut)",
+      "status": "Vault",
+      "notes": "Bubba Kush x Animal Mints. Rabid Hippie cut — SoCal classic. Verified cut from Pig Tail Gardens.",
+      "added": "2026-05-31"
     }
   ]
 }
