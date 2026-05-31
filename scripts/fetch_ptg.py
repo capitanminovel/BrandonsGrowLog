@@ -68,14 +68,14 @@ PTG_URLS = {
     # Verify exact slugs below via: python scripts/fetch_ptg.py --discover
     "nana-glue":              "https://www.pigtailgardens.com/product-page/nana-glue-monroes-bedhead-cut",
     "lipsmackerz":            "https://www.pigtailgardens.com/product-page/lipsmackerz-cltvtf-x-good-genes",
+    "pre-98-bubba-kush":      "https://www.pigtailgardens.com/product-page/pre-98-bubba-kush-heirloom-cut",
 }
 
 # Non-PTG strains — fetched from each breeder's own site or Leafly
 OTHER_URLS = {
-    "kryptochronic":      "https://alienlabs.org/products/kryptochronic",
-    "grease-monkey":      "https://exoticgenetix.com/product-category/seeds/grease-monkey/",
-    "jet-fuel-og":        "https://www.leafly.com/strains/jet-fuel-og",
-    "pre-98-bubba-kush":  "https://www.leafly.com/strains/pre-98-bubba-kush",
+    "kryptochronic":  "https://alienlabs.org/products/kryptochronic",
+    "grease-monkey":  "https://exoticgenetix.com/product-category/seeds/grease-monkey/",
+    "jet-fuel-og":    "https://www.leafly.com/strains/jet-fuel-og",
 }
 
 
