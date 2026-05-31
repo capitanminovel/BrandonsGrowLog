@@ -1,0 +1,68 @@
+{
+  "strains": [
+    {
+      "id": "ocifer",
+      "name": "Ocifer",
+      "breeder": "Brothers Grimm",
+      "status": "Vault",
+      "notes": "",
+      "added": "2026-05-27"
+    },
+    {
+      "id": "pasture-bedtime",
+      "name": "Pasture Bedtime",
+      "breeder": "Solfire Gardens",
+      "status": "Vault",
+      "notes": "",
+      "added": "2026-05-27"
+    },
+    {
+      "id": "mind-flayer-s1",
+      "name": "Mind Flayer S1",
+      "breeder": "Solfire Gardens",
+      "status": "Vault",
+      "notes": "",
+      "added": "2026-05-27"
+    },
+    {
+      "id": "strawn-johnson",
+      "name": "Strawn Johnson",
+      "breeder": "Solfire Gardens",
+      "status": "Vault",
+      "notes": "",
+      "added": "2026-05-27"
+    },
+    {
+      "id": "mandarin-cookies-v3",
+      "name": "Mandarin Cookies V3",
+      "breeder": "Ethos Genetics",
+      "status": "Vault",
+      "notes": "",
+      "added": "2026-05-27"
+    },
+    {
+      "id": "cotton-candy-cookies",
+      "name": "Cotton Candy Cookies",
+      "breeder": "Ethos Genetics",
+      "status": "Vault",
+      "notes": "Cross: Grape x Mandarin Cookies",
+      "added": "2026-05-27"
+    },
+    {
+      "id": "spicy-guava",
+      "name": "Spicy Guava",
+      "breeder": "Elev8 Seeds",
+      "status": "Vault",
+      "notes": "",
+      "added": "2026-05-27"
+    },
+    {
+      "id": "blueberry-pie",
+      "name": "Blueberry Pie",
+      "breeder": "Elev8 Seeds",
+      "status": "Vault",
+      "notes": "",
+      "added": "2026-05-27"
+    }
+  ]
+}
