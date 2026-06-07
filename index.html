@@ -70,7 +70,12 @@
     .card-date { font-size:.65rem; color:var(--faint); font-family:'JetBrains Mono',monospace; }
     .card-researched { font-size:.62rem; color:var(--green-hi); display:flex; align-items:center; gap:3px; letter-spacing:.04em; }
 
-    .modal-hero-img { width:100%; max-height:260px; object-fit:cover; display:none; }
+    .modal-hero-img { width:100%; max-height:260px; object-fit:cover; display:none; cursor:pointer; transition:opacity .15s; }
+    .modal-hero-img:hover { opacity:.88; }
+
+    .lightbox-overlay { position:fixed; inset:0; background:rgba(0,0,0,.92); z-index:500; display:flex; align-items:center; justify-content:center; padding:1rem; cursor:zoom-out; }
+    .lightbox-overlay.hidden { display:none; }
+    .lightbox-img { max-width:100%; max-height:100%; object-fit:contain; border-radius:4px; pointer-events:none; }
 
     .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.78); backdrop-filter:blur(5px); z-index:200; display:flex; align-items:center; justify-content:center; padding:1rem; }
     .modal-overlay.hidden { display:none; }
@@ -162,7 +167,7 @@
 <header>
   <div class="brand">
     <div class="brand-name">MN PUFF's Grow Log</div>
-    <div class="brand-tagline">Pigtail Gardens &middot; Track &middot; Harvest</div>
+    <div class="brand-tagline">Track &middot; Harvest</div>
   </div>
   <div class="header-actions">
     <button class="btn-icon" id="key-indicator" onclick="openSettings()" title="API Key Settings">&#9881;</button>
@@ -207,7 +212,7 @@
         <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
       </div>
     </div>
-    <img id="modal-strain-img" class="modal-hero-img" alt="">
+    <img id="modal-strain-img" class="modal-hero-img" alt="" onclick="openLightbox(this.src,this.alt)" title="Click to enlarge">
     <div class="research-tabs hidden" id="research-tabs">
       <button class="tab-btn active" data-tab="genetics" onclick="switchTab('genetics',this)">&#x1F9EC; Genetics</button>
       <button class="tab-btn" data-tab="terpenes"        onclick="switchTab('terpenes',this)">&#x1F33F; Terpenes</button>
@@ -249,9 +254,14 @@
 
 <div class="toast hidden" id="toast"></div>
 
+<!-- Lightbox -->
+<div class="lightbox-overlay hidden" id="lightbox" onclick="closeLightbox()">
+  <img class="lightbox-img" id="lightbox-img" src="" alt="">
+</div>
+
 <footer>
   <div class="footer-text">
-    MN PUFF's Grow Log <span class="sep">&middot;</span> Pigtail Gardens <span class="sep">&middot;</span> Personal Use Only - NFS <span class="sep">&middot;</span> Research powered by Claude AI
+    MN PUFF's Grow Log <span class="sep">&middot;</span> Personal Use Only - NFS <span class="sep">&middot;</span> Research powered by Claude AI
   </div>
 </footer>
 
@@ -261,6 +271,14 @@
 const LS_STRAINS  = 'bgl_strains';
 const LS_RESEARCH = 'bgl_research';
 const LS_APIKEY   = 'bgl_apikey';
+
+// Maps strain IDs to their actual image filenames (when filename differs from id)
+const STRAIN_IMAGES = {
+  'limecicle':    'LIMECICLE.png',
+  'nana-glue':    'NANAGLUE.png',
+  'papayamosa':   'PAPAYAMOSA.png',
+  'rainbow-runtz':'RAINBOWRUNTZ.png',
+};
 
 const DEFAULT_STRAINS = [
   { id:'pineapples-in-space-4', name:'Pineapples in Space #4', breeder:'Tiki Mad Man (Smashby\'s Trees cut)', status:'Vault', notes:'Pineapple Tart x Space Runtz. Verified cut from Pig Tail Gardens.', added:'2026-05-31' },
@@ -338,6 +356,13 @@ async function init() {
 
 function loadStrainImg(el, id) {
   el.style.display = 'none';
+  // If there's a direct filename mapping, use that first
+  if (STRAIN_IMAGES[id]) {
+    el.onload  = () => { el.style.display = 'block'; };
+    el.onerror = () => { el.style.display = 'none'; };
+    el.src = `images/strains/${STRAIN_IMAGES[id]}?v=3`;
+    return;
+  }
   el.onload  = () => { el.style.display = 'block'; };
   el.onerror = () => {
     if (!el.dataset.triedPng) {
@@ -348,6 +373,21 @@ function loadStrainImg(el, id) {
     }
   };
   el.src = `images/strains/${id}.jpg?v=3`;
+}
+
+function openLightbox(src, alt) {
+  const lb = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-img');
+  img.src = src;
+  img.alt = alt;
+  lb.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.add('hidden');
+  const anyOpen = ['detail-modal','settings-modal'].some(mid => !document.getElementById(mid).classList.contains('hidden'));
+  if (!anyOpen) document.body.style.overflow = '';
 }
 
 function renderGrid() {
@@ -667,6 +707,7 @@ document.getElementById('detail-modal').addEventListener('click',  e => { if (e.
 document.getElementById('settings-modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeSettings(); });
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
+  if (!document.getElementById('lightbox').classList.contains('hidden')) { closeLightbox(); return; }
   if (!document.getElementById('detail-modal').classList.contains('hidden'))  closeDetailModal();
   else if (!document.getElementById('settings-modal').classList.contains('hidden')) closeSettings();
 });
