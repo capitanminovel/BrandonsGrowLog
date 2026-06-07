@@ -13,25 +13,19 @@ A personal cannabis strain vault and research tracker. Browse your collection, r
 
 The page loads `data/strains.json` and `data/research_cache.json` automatically. Just edit those files, commit, and push — the page updates within a minute.
 
-### Local web server (no Python/FastAPI required)
+### Local preview (no install required)
 ```bash
 python -m http.server 8080
 # then open http://localhost:8080
 ```
 
-### Full backend (enables add/edit/delete UI + AI research generation)
-```bash
-pip install fastapi uvicorn anthropic
-uvicorn main:app --reload
-# then open http://localhost:8000
-```
-Set your `ANTHROPIC_API_KEY` environment variable to use AI research generation.
-
 ---
 
-## Adding or Editing Strains
+## Adding a New Strain
 
-Edit `data/strains.json`. Each strain is one object in the `"strains"` array:
+### Step 1 — Add it to `data/strains.json`
+
+Open `data/strains.json` and add a new object to the `"strains"` array:
 
 ```json
 {
@@ -40,46 +34,110 @@ Edit `data/strains.json`. Each strain is one object in the `"strains"` array:
   "breeder": "Breeder Name",
   "status": "Vault",
   "notes": "Cross info, source, any notes you want on the card.",
-  "added": "2026-06-01"
+  "added": "2026-06-07"
 }
 ```
 
 **Status options:** `Vault` · `Active` · `Grow Log` · `Cured`
 
-The `id` must be unique — lowercase letters and hyphens only, e.g. `"cherry-jealousy"`. It is also used to match the strain photo (see below).
+The `id` must be unique — lowercase letters and hyphens only, e.g. `"cherry-jealousy"`.
 
----
+### Step 2 — Add a URL to `scripts/fetch_ptg.py` (PTG strains only)
 
-## Adding or Editing Research Profiles
+Open `scripts/fetch_ptg.py` and add one line to `PTG_URLS`:
 
-Edit `data/research_cache.json`. The key is the strain's `id`. Each entry has six fields:
+```python
+"my-new-strain": "https://www.pigtailgardens.com/product-page/the-page-slug",
+```
+
+For non-PTG strains, add to `OTHER_URLS` instead.
+
+### Step 3 — Fetch the page text
+
+Run this from your local machine (pigtailgardens.com blocks cloud IPs):
+
+```bash
+pip install requests beautifulsoup4   # one-time setup
+python scripts/fetch_ptg.py --id my-new-strain
+```
+
+This saves the page content to `scripts/ptg_pages/my-new-strain.txt`.
+
+### Step 4 — Generate the research profile with Claude (free tier works)
+
+1. Open `scripts/ptg_pages/my-new-strain.txt` in any text editor and copy everything.
+2. Go to [claude.ai](https://claude.ai) and start a new chat.
+3. Paste this message — fill in the strain name/breeder and paste the file contents at the bottom:
+
+```
+Here is the product page text for a cannabis strain called
+"[Strain Name]" by [Breeder]. Generate a research profile for it.
+
+Return ONLY valid JSON with exactly these six keys — no extra text,
+no markdown, just the raw JSON object:
+
+{
+  "genetics_lineage": "3-4 sentences: parent strains, full genetic lineage, breeder background, phenotype notes, what makes this cultivar sought after.",
+  "terpene_profile": "3-4 sentences: dominant and secondary terpenes, aromas, synergistic interactions, how expression develops through cure.",
+  "effects": "3-4 sentences: onset character, intensity, cerebral vs body, duration, mood profile, best use cases.",
+  "flavor_aroma": "3-4 sentences: inhale/exhale flavor, aroma at grow stages (late flower, harvest, fresh cure, long cure).",
+  "grow_notes": "3-4 sentences: structure and stretch, flowering time, training recommendations, environmental preferences, harvest indicators.",
+  "rosin_extraction": "3-4 sentences: IWHE yield %, press temps in F, wash water temp, what the finished rosin looks and smells like."
+}
+
+Source text:
+[PASTE THE CONTENTS OF my-new-strain.txt HERE]
+```
+
+### Step 5 — Paste the JSON into `data/research_cache.json`
+
+Add it as a new top-level key using the strain's `id`:
 
 ```json
-"my-new-strain": {
-  "genetics_lineage": "3-4 sentences: parent strains, breeder background, phenotype notes, what makes it sought after.",
-  "terpene_profile": "3-4 sentences: dominant and secondary terpenes, aromas, synergistic interactions, how expression develops through cure.",
-  "effects": "3-4 sentences: onset character, intensity, cerebral vs body balance, duration, best use cases.",
-  "flavor_aroma": "3-4 sentences: inhale/exhale flavor, aroma through grow stages (late flower, harvest, fresh cure, long cure).",
-  "grow_notes": "3-4 sentences: structure and stretch, flowering time, training recommendations, environmental preferences.",
-  "rosin_extraction": "3-4 sentences: IWHE yield %, press temps in °F, wash water temp, what the finished rosin looks and smells like.",
-  "generated_at": "2026-06-01T12:00:00"
+{
+  "existing-strain": { ... },
+  "my-new-strain": {
+    "genetics_lineage": "...",
+    "terpene_profile": "...",
+    "effects": "...",
+    "flavor_aroma": "...",
+    "grow_notes": "...",
+    "rosin_extraction": "...",
+    "generated_at": "2026-06-07T00:00:00"
+  }
 }
 ```
 
-If a strain has no research entry, the app shows a **Generate Research** button (requires the FastAPI backend and an Anthropic API key).
+### Step 6 — Commit and push
+
+```bash
+git add data/strains.json data/research_cache.json
+git commit -m "Add My New Strain"
+git push
+```
+
+GitHub Pages picks up the push within ~60 seconds.
 
 ---
 
-## Adding Strain Photos
+## Adding a Strain Photo
 
-Drop a `.jpg` or `.png` named after the strain's `id` into `images/strains/`:
+Drop a `.jpg` or `.png` into `images/strains/` named after the strain's `id`:
 
 ```
-images/strains/rainbow-runtz.jpg
-images/strains/jam-pack-2.png
+images/strains/my-new-strain.jpg
 ```
 
-The app displays it automatically on the card and in the detail modal.
+If your filename is different from the strain ID (e.g. all-caps), add a mapping entry to `STRAIN_IMAGES` in `index.html` so the app can find it:
+
+```js
+const STRAIN_IMAGES = {
+  'my-new-strain': 'MY_NEW_STRAIN.png',
+  // ...
+};
+```
+
+The image appears automatically on the strain card and in the detail modal. Click it in the modal to view full-size.
 
 ---
 
@@ -88,34 +146,22 @@ The app displays it automatically on the card and in the detail modal.
 ```
 BrandonsGrowLog/
 ├── index.html                  # The entire front-end app
-├── main.py                     # Optional FastAPI backend
 ├── data/
-│   ├── strains.json            # Your strain vault — edit this to add/change strains
-│   └── research_cache.json     # Research profiles — edit this to add/change research
-└── images/
-    └── strains/                # Strain photos: [id].jpg or [id].png
+│   ├── strains.json            # Your strain vault — edit to add/change strains
+│   └── research_cache.json     # Research profiles — edit to add/change research
+├── images/
+│   └── strains/                # Strain photos: [id].jpg or [id].png
+└── scripts/
+    └── fetch_ptg.py            # Fetches PTG/breeder pages for Claude to process
 ```
-
----
-
-## Deploying Changes
-
-```bash
-git add data/strains.json data/research_cache.json
-git commit -m "Add [strain name]"
-git push
-```
-
-GitHub Pages picks up the push within ~60 seconds.
 
 ---
 
 ## How the App Loads Data
 
-The app tries three sources in order:
+The app tries two sources in order:
 
-1. **FastAPI backend** at `/api/strains` — used when running `uvicorn main:app` locally
-2. **Static JSON files** at `./data/strains.json` + `./data/research_cache.json` — used on GitHub Pages or any web server
-3. **Browser localStorage** — last-resort fallback if neither is reachable
+1. **Static JSON files** at `./data/strains.json` + `./data/research_cache.json` — used on GitHub Pages or any web server
+2. **Browser localStorage** — last-resort fallback if neither is reachable
 
-For most users on GitHub Pages, path 2 is always used and everything just works.
+On GitHub Pages, path 1 is always used and everything just works.

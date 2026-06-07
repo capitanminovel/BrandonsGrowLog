@@ -1,27 +1,84 @@
 #!/usr/bin/env python3
 """
-Fetch strain pages and save the text to scripts/ptg_pages/.
+Fetch ONE strain page and save the text to scripts/ptg_pages/.
 
 Must be run from your LOCAL machine — pigtailgardens.com blocks cloud server IPs.
-No API key needed. After running, the saved text files can be processed by Claude
-(in Claude Code or Claude chat) to update data/research_cache.json.
+No API key needed.
 
 Setup (one time):
     pip install requests beautifulsoup4 playwright
     playwright install chromium
 
-Usage:
-    python scripts/fetch_ptg.py                  # fetch all known PTG strains
-    python scripts/fetch_ptg.py --other          # fetch non-PTG strains from their source sites
-    python scripts/fetch_ptg.py --discover       # list all current PTG product URLs
-    python scripts/fetch_ptg.py <url>            # fetch one specific page
+─────────────────────────────────────────────────────────────────────────────
+ADDING A NEW STRAIN — step by step
+─────────────────────────────────────────────────────────────────────────────
 
-After running:
-    Open a Claude Code session in this repo and say:
-    "Read the text files in scripts/ptg_pages/, extract structured research
-     for each strain, and update data/research_cache.json. Use the six-field
-     format: genetics_lineage, terpene_profile, effects, flavor_aroma,
-     grow_notes, rosin_extraction. Focus on solventless hash and craft growing."
+STEP 1 — Add the strain to PTG_URLS below (or OTHER_URLS if not a PTG strain):
+    "your-strain-id": "https://www.pigtailgardens.com/product-page/your-strain-slug"
+
+    The ID must match the "id" field you added in data/strains.json.
+    Lowercase letters and hyphens only, e.g. "cherry-jealousy".
+
+STEP 2 — Fetch the page for that one strain:
+    python scripts/fetch_ptg.py --id your-strain-id
+
+    This saves the page text to scripts/ptg_pages/your-strain-id.txt.
+
+STEP 3 — Generate the research profile using Claude (free tier works fine):
+    a. Open scripts/ptg_pages/your-strain-id.txt in a text editor.
+    b. Copy the entire contents.
+    c. Go to claude.ai and start a new chat.
+    d. Paste this message (replace the bracketed parts):
+
+    ──────────────────────────────────────────────────────────────────────
+    Here is the product page text for a cannabis strain called
+    "[Strain Name]" by [Breeder]. I need you to generate a research
+    profile for it.
+
+    Return ONLY valid JSON with exactly these six keys — no extra text,
+    no markdown, just the raw JSON:
+
+    {
+      "genetics_lineage": "3-4 sentences: parent strains, full genetic lineage, breeder background, phenotype notes, what makes this cultivar sought after.",
+      "terpene_profile": "3-4 sentences: dominant and secondary terpenes, aromas, synergistic interactions, how expression develops through cure.",
+      "effects": "3-4 sentences: onset character, intensity, cerebral vs body, duration, mood profile, best use cases.",
+      "flavor_aroma": "3-4 sentences: inhale/exhale flavor, aroma at grow stages (late flower, harvest, fresh cure, long cure).",
+      "grow_notes": "3-4 sentences: structure and stretch, flowering time, training recommendations, environmental preferences, harvest indicators.",
+      "rosin_extraction": "3-4 sentences: IWHE yield %, press temps in F, wash water temp, what the finished rosin looks and smells like."
+    }
+
+    Source text:
+    [PASTE THE CONTENTS OF THE .txt FILE HERE]
+    ──────────────────────────────────────────────────────────────────────
+
+STEP 4 — Paste the JSON Claude gives you into data/research_cache.json:
+    Add it as a new key using the strain ID. Example:
+
+    {
+      "existing-strain": { ... },
+      "your-strain-id": {
+        "genetics_lineage": "...",
+        "terpene_profile": "...",
+        "effects": "...",
+        "flavor_aroma": "...",
+        "grow_notes": "...",
+        "rosin_extraction": "...",
+        "generated_at": "2026-06-07T00:00:00"
+      }
+    }
+
+STEP 5 — Commit and push:
+    git add data/strains.json data/research_cache.json
+    git commit -m "Add [Strain Name]"
+    git push
+
+─────────────────────────────────────────────────────────────────────────────
+Other usage
+─────────────────────────────────────────────────────────────────────────────
+    python scripts/fetch_ptg.py --discover       # list all current PTG product URLs
+    python scripts/fetch_ptg.py --all            # fetch every strain in PTG_URLS
+    python scripts/fetch_ptg.py --other          # fetch non-PTG strains
+    python scripts/fetch_ptg.py <url>            # fetch any page by URL directly
 """
 
 import sys
@@ -201,15 +258,31 @@ def main():
     if len(sys.argv) > 1 and sys.argv[1] == "--other":
         urls_to_fetch = OTHER_URLS
         label = "non-PTG"
+    elif len(sys.argv) > 1 and sys.argv[1] == "--all":
+        urls_to_fetch = PTG_URLS
+        label = "PTG (all)"
+    elif len(sys.argv) > 2 and sys.argv[1] == "--id":
+        strain_id = sys.argv[2]
+        all_urls = {**PTG_URLS, **OTHER_URLS}
+        if strain_id not in all_urls:
+            print(f"Error: '{strain_id}' not found in PTG_URLS or OTHER_URLS.")
+            print("Add it to the PTG_URLS dict at the top of this script first.")
+            sys.exit(1)
+        urls_to_fetch = {strain_id: all_urls[strain_id]}
+        label = "single"
     elif len(sys.argv) > 1 and sys.argv[1].startswith("http"):
         url = sys.argv[1]
-        # derive a slug from the last path segment
         slug = url.rstrip("/").split("/")[-1]
         urls_to_fetch = {slug: url}
         label = "custom"
     else:
-        urls_to_fetch = PTG_URLS
-        label = "PTG"
+        print("Usage: python scripts/fetch_ptg.py --id <strain-id>")
+        print("       python scripts/fetch_ptg.py --all")
+        print("       python scripts/fetch_ptg.py --other")
+        print("       python scripts/fetch_ptg.py --discover")
+        print("       python scripts/fetch_ptg.py <url>")
+        print("\nFor adding one new strain, use --id. See the docstring for full instructions.")
+        sys.exit(0)
 
     saved, failed = [], []
 
